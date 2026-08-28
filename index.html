@@ -10,56 +10,74 @@
         .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .task-card { transition: all 0.3s ease; }
         .task-active { border-left: 4px solid #22c55e; background: rgba(34, 197, 94, 0.1); }
-        .task-expired { opacity: 0.6; border-left: 4px solid #ef4444; }
-        .task-completed { border-left: 4px solid #eab308; background: rgba(234, 179, 8, 0.05); }
+        .leaderboard-row:nth-child(1) { color: #facc15; } /* Gold for Rank 1 */
     </style>
 </head>
 <body class="p-4 md:p-8">
     <div id="auth-section" class="flex flex-col items-center justify-center h-screen">
         <h1 class="text-5xl font-black mb-4 text-blue-500 italic">WINTER ARC</h1>
-        <p class="text-gray-400 mb-8">Join the 30-Day Fitness Challenge ❄️</p>
         <button id="login-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-full font-bold shadow-lg transition">
             Start Your Journey
         </button>
     </div>
 
-    <div id="dashboard-section" class="hidden max-w-2xl mx-auto space-y-6">
-        <!-- Header -->
+    <div id="dashboard-section" class="hidden max-w-2xl mx-auto space-y-6 pb-20">
+        <!-- Header & Logout -->
         <div class="flex justify-between items-center">
             <h2 class="text-3xl font-black italic text-blue-400">WINTER ARC</h2>
-            <button id="logout-btn" class="text-xs text-red-400 opacity-50 hover:opacity-100">Logout</button>
+            <button id="logout-btn" class="text-xs text-red-400 opacity-50 hover:opacity-100 border border-red-400/30 px-2 py-1 rounded">Logout</button>
         </div>
 
-        <!-- App-style Timer -->
+        <!-- Timer -->
         <div class="bg-emerald-600/10 border border-emerald-500/30 p-6 rounded-2xl text-center">
             <p class="text-gray-400 text-[10px] font-bold tracking-widest uppercase mb-2">Challenge Starts In</p>
-            <h3 id="countdown-timer" class="text-xl md:text-2xl font-mono font-black text-emerald-500">
-                00 Days : 00 Hrs : 00 Mins : 00 Sec
-            </h3>
+            <h3 id="countdown-timer" class="text-xl md:text-2xl font-mono font-black text-emerald-500">00 Days : 00 Hrs : 00 Mins : 00 Sec</h3>
         </div>
 
-        <!-- User Profile Card -->
-        <div class="glass-card p-6 rounded-2xl flex items-center justify-between">
+        <!-- Leaderboard Section -->
+        <div class="glass-card p-6 rounded-2xl">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="text-yellow-500 text-xl">🏆</span>
+                <h3 class="text-lg font-bold text-yellow-500 uppercase tracking-wider">Top Warriors</h3>
+            </div>
+            <div class="overflow-hidden">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="text-gray-500 text-[10px] uppercase border-b border-white/5">
+                            <th class="pb-2">Rank</th>
+                            <th class="pb-2">Name</th>
+                            <th class="pb-2 text-right">Streak</th>
+                            <th class="pb-2 text-right">Points</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        <!-- Leaderboard data will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- User Stats Card -->
+        <div class="glass-card p-6 rounded-2xl flex items-center justify-between border-l-4 border-blue-500">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-xl font-bold text-blue-400" id="user-initial">W</div>
+                <div class="w-12 h-12 rounded-full bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-xl font-bold text-blue-400" id="user-initial">?</div>
                 <div>
                     <h3 id="user-name" class="font-bold text-lg">Loading...</h3>
                     <p class="text-sm text-yellow-500 font-bold"><span id="user-points">0</span> Points</p>
                 </div>
             </div>
             <div class="text-right">
-                <p class="text-[10px] text-gray-500 uppercase font-bold">Streak 🔥</p>
+                <p class="text-[10px] text-gray-500 uppercase font-bold">Your Streak 🔥</p>
                 <p id="user-streak" class="text-xl font-black text-orange-500">0 Days</p>
             </div>
         </div>
 
-        <!-- Daily Checklist (App Style) -->
+        <!-- Daily Tasks -->
         <div class="glass-card p-6 rounded-2xl">
             <div class="flex items-center gap-2 mb-6">
                 <span class="text-emerald-500 text-xl">📋</span>
-                <h3 class="text-lg font-bold text-emerald-500">4. Daily Time-Locked Tasks</h3>
+                <h3 class="text-lg font-bold text-emerald-500">Daily Time-Locked Tasks</h3>
             </div>
-            
             <div id="tasks-container" class="space-y-3">
                 <!-- Tasks will be injected here -->
             </div>
@@ -69,7 +87,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, collection, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCZqTzcU4kK5nkEkB1UcBQlMA-lOv0EPl0",
@@ -77,7 +95,7 @@
             projectId: "winter-arc-ba20e",
             storageBucket: "winter-arc-ba20e.appspot.com",
             messagingSenderId: "564956254415",
-            appId: "PASTE_YOUR_WEB_APP_ID_HERE" 
+            appId: "PASTE_YOUR_WEB_APP_ID_HERE"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -89,7 +107,7 @@
             { id: 2, text: "Cold Shower", start: "05:15", end: "05:30" },
             { id: 3, text: "Morning Running/Exercise", start: "06:00", end: "07:00" },
             { id: 4, text: "Deep Work / Learning Skill", start: "09:00", end: "11:00" },
-            { id: 5, text: "Healthy Lunch (No Phone)", start: "13:00", max: "13:30" },
+            { id: 5, text: "Healthy Lunch (No Phone)", start: "13:00", end: "13:30" },
             { id: 6, text: "Study Session", start: "15:00", end: "17:00" },
             { id: 7, text: "Calisthenics / Gym", start: "18:00", end: "19:00" },
             { id: 8, text: "Digital Detox (No Phone)", start: "20:00", end: "21:00" },
@@ -97,12 +115,12 @@
             { id: 10, text: "Sleep Early", start: "22:00", end: "22:15" }
         ];
 
-        // --- AUTH LOGIC ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('auth-section').classList.add('hidden');
                 document.getElementById('dashboard-section').classList.remove('hidden');
                 setupRealtimeUpdates(user.uid);
+                setupLeaderboard();
             } else {
                 document.getElementById('auth-section').classList.remove('hidden');
                 document.getElementById('dashboard-section').classList.add('hidden');
@@ -112,26 +130,30 @@
         document.getElementById('login-btn').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
         document.getElementById('logout-btn').onclick = () => signOut(auth);
 
-        // --- TIMER LOGIC ---
-        function updateTimer() {
-            const now = new Date();
-            const target = new Date(2026, 8, 1); // 1st September 2026
-            const diff = target - now;
-
-            if (diff > 0) {
-                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-                const mins = Math.floor((diff / (1000 * 60)) % 60);
-                const secs = Math.floor((diff / 1000) % 60);
-                document.getElementById('countdown-timer').innerText = 
-                    `${days.toString().padStart(2, '0')} Days : ${hours.toString().padStart(2, '0')} Hrs : ${mins.toString().padStart(2, '0')} Mins : ${secs.toString().padStart(2, '0')} Sec`;
-            } else {
-                document.getElementById('countdown-timer').innerText = "CHALLENGE IS LIVE!";
-            }
+        function setupLeaderboard() {
+            const q = query(collection(db, "users"), orderBy("points", "desc"), limit(10));
+            onSnapshot(q, (snapshot) => {
+                const tbody = document.getElementById('leaderboard-body');
+                tbody.innerHTML = '';
+                let rank = 1;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    tbody.innerHTML += `
+                        <tr class="leaderboard-row border-b border-white/5">
+                            <td class="py-3 font-bold">#${rank}</td>
+                            <td class="py-3 flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center text-[10px] text-blue-400 border border-blue-500/20">${data.name.charAt(0)}</div>
+                                <span>${data.name}</span>
+                            </td>
+                            <td class="py-3 text-right text-orange-400 font-bold">${data.streak} 🔥</td>
+                            <td class="py-3 text-right font-black text-white">${data.points}</td>
+                        </tr>
+                    `;
+                    rank++;
+                });
+            });
         }
-        setInterval(updateTimer, 1000);
 
-        // --- TASKS LOGIC ---
         function setupRealtimeUpdates(uid) {
             onSnapshot(doc(db, "users", uid), (snapshot) => {
                 if (snapshot.exists()) {
@@ -140,7 +162,6 @@
                     document.getElementById('user-initial').innerText = data.name.charAt(0).toUpperCase();
                     document.getElementById('user-points').innerText = data.points;
                     document.getElementById('user-streak').innerText = data.streak + " Days";
-                    
                     renderTasks(data.dailyTaskCounts || {});
                 }
             });
@@ -149,46 +170,42 @@
         function renderTasks(completedTasks) {
             const container = document.getElementById('tasks-container');
             container.innerHTML = '';
-            
             const now = new Date();
             const currentMins = now.getHours() * 60 + now.getMinutes();
-
             rules.forEach(rule => {
                 const [sH, sM] = rule.start.split(':').map(Number);
-                const [eH, eM] = (rule.end || rule.max).split(':').map(Number);
+                const [eH, eM] = rule.end.split(':').map(Number);
                 const startMins = sH * 60 + sM;
                 const endMins = eH * 60 + eM;
-
                 const isCompleted = completedTasks[rule.id] > 0;
                 const isActive = currentMins >= startMins && currentMins <= endMins;
                 const isExpired = currentMins > endMins && !isCompleted;
-
-                let statusText = `Window: ${rule.start} - ${rule.end || rule.max}`;
-                let cardClass = "glass-card";
-                let badge = "";
-
-                if (isCompleted) {
-                    cardClass += " task-completed";
-                    badge = `<span class="text-emerald-500 font-bold text-[10px]">DONE ✓</span>`;
-                } else if (isActive) {
-                    cardClass += " task-active";
-                    badge = `<span class="text-emerald-500 font-black text-[10px] animate-pulse">ACTIVE</span>`;
-                } else if (isExpired) {
-                    cardClass += " task-expired";
-                    badge = `<span class="text-red-500 font-bold text-[10px]">MISSED ✕</span>`;
-                }
-
+                let cardClass = isCompleted ? "task-completed" : isActive ? "task-active" : isExpired ? "task-expired" : "";
                 container.innerHTML += `
-                    <div class="task-card ${cardClass} p-4 rounded-xl flex justify-between items-center">
+                    <div class="task-card glass-card ${cardClass} p-4 rounded-xl flex justify-between items-center">
                         <div>
                             <h4 class="text-sm font-medium ${isCompleted ? 'text-gray-500' : 'text-white'}">${rule.text}</h4>
-                            <p class="text-[10px] text-gray-400 mt-1">${statusText}</p>
+                            <p class="text-[10px] text-gray-400 mt-1">${rule.start} - ${rule.end}</p>
                         </div>
-                        ${badge}
+                        ${isCompleted ? '<span class="text-emerald-500 font-bold text-[10px]">✓</span>' : isActive ? '<span class="text-emerald-500 font-black text-[10px] animate-pulse">ACTIVE</span>' : ''}
                     </div>
                 `;
             });
         }
+
+        function updateTimer() {
+            const now = new Date();
+            const target = new Date(2026, 8, 1);
+            const diff = target - now;
+            if (diff > 0) {
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                const mins = Math.floor((diff / (1000 * 60)) % 60);
+                const secs = Math.floor((diff / 1000) % 60);
+                document.getElementById('countdown-timer').innerText = `${days}d : ${hours}h : ${mins}m : ${secs}s`;
+            } else { document.getElementById('countdown-timer').innerText = "CHALLENGE IS LIVE!"; }
+        }
+        setInterval(updateTimer, 1000);
     </script>
 </body>
 </html>
