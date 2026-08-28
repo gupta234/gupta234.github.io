@@ -4,83 +4,85 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Winter Arc Dashboard</title>
+    
+    <!-- GOOGLE ADSENSE VERIFICATION CODE (As per your screenshot) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6551032201404007"
+     crossorigin="anonymous"></script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; }
         .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .task-card { transition: all 0.3s ease; }
         .task-active { border-left: 4px solid #22c55e; background: rgba(34, 197, 94, 0.1); }
-        .leaderboard-row:nth-child(1) { color: #facc15; } /* Gold for Rank 1 */
+        .leaderboard-row:nth-child(1) { color: #facc15; }
     </style>
 </head>
 <body class="p-4 md:p-8">
-    <div id="auth-section" class="flex flex-col items-center justify-center h-screen">
+    <div id="auth-section" class="flex flex-col items-center justify-center h-screen text-center">
         <h1 class="text-5xl font-black mb-4 text-blue-500 italic">WINTER ARC</h1>
+        <p class="text-gray-400 mb-8">Official Web Dashboard</p>
         <button id="login-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-full font-bold shadow-lg transition">
             Start Your Journey
         </button>
     </div>
 
     <div id="dashboard-section" class="hidden max-w-2xl mx-auto space-y-6 pb-20">
-        <!-- Header & Logout -->
+        <!-- Header -->
         <div class="flex justify-between items-center">
             <h2 class="text-3xl font-black italic text-blue-400">WINTER ARC</h2>
-            <button id="logout-btn" class="text-xs text-red-400 opacity-50 hover:opacity-100 border border-red-400/30 px-2 py-1 rounded">Logout</button>
+            <button id="logout-btn" class="text-xs text-red-400 opacity-50 border border-red-400/30 px-2 py-1 rounded">Logout</button>
+        </div>
+
+        <!-- Banner Ad Slot -->
+        <div class="glass-card p-2 rounded-2xl overflow-hidden min-h-[90px] flex items-center justify-center bg-white/5">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-6551032201404007"
+                 data-ad-slot="default" 
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
         </div>
 
         <!-- Timer -->
         <div class="bg-emerald-600/10 border border-emerald-500/30 p-6 rounded-2xl text-center">
             <p class="text-gray-400 text-[10px] font-bold tracking-widest uppercase mb-2">Challenge Starts In</p>
-            <h3 id="countdown-timer" class="text-xl md:text-2xl font-mono font-black text-emerald-500">00 Days : 00 Hrs : 00 Mins : 00 Sec</h3>
+            <h3 id="countdown-timer" class="text-xl md:text-2xl font-mono font-black text-emerald-500">00d : 00h : 00m : 00s</h3>
         </div>
 
-        <!-- Leaderboard Section -->
+        <!-- Leaderboard -->
         <div class="glass-card p-6 rounded-2xl">
             <div class="flex items-center gap-2 mb-4">
                 <span class="text-yellow-500 text-xl">🏆</span>
-                <h3 class="text-lg font-bold text-yellow-500 uppercase tracking-wider">Top Warriors</h3>
+                <h3 class="text-lg font-bold text-yellow-500 uppercase">Top Warriors</h3>
             </div>
-            <div class="overflow-hidden">
-                <table class="w-full text-left text-sm">
-                    <thead>
-                        <tr class="text-gray-500 text-[10px] uppercase border-b border-white/5">
-                            <th class="pb-2">Rank</th>
-                            <th class="pb-2">Name</th>
-                            <th class="pb-2 text-right">Streak</th>
-                            <th class="pb-2 text-right">Points</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leaderboard-body">
-                        <!-- Leaderboard data will be injected here -->
-                    </tbody>
-                </table>
-            </div>
+            <table class="w-full text-left text-sm">
+                <tbody id="leaderboard-body"></tbody>
+            </table>
         </div>
 
-        <!-- User Stats Card -->
+        <!-- User Stats -->
         <div class="glass-card p-6 rounded-2xl flex items-center justify-between border-l-4 border-blue-500">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-xl font-bold text-blue-400" id="user-initial">?</div>
+                <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-xl font-bold text-blue-400" id="user-initial">?</div>
                 <div>
-                    <h3 id="user-name" class="font-bold text-lg">Loading...</h3>
+                    <h3 id="user-name" class="font-bold">Warrior</h3>
                     <p class="text-sm text-yellow-500 font-bold"><span id="user-points">0</span> Points</p>
                 </div>
             </div>
             <div class="text-right">
-                <p class="text-[10px] text-gray-500 uppercase font-bold">Your Streak 🔥</p>
+                <p class="text-[10px] text-gray-500 uppercase">Streak 🔥</p>
                 <p id="user-streak" class="text-xl font-black text-orange-500">0 Days</p>
             </div>
         </div>
 
-        <!-- Daily Tasks -->
+        <!-- Tasks -->
         <div class="glass-card p-6 rounded-2xl">
-            <div class="flex items-center gap-2 mb-6">
-                <span class="text-emerald-500 text-xl">📋</span>
-                <h3 class="text-lg font-bold text-emerald-500">Daily Time-Locked Tasks</h3>
-            </div>
-            <div id="tasks-container" class="space-y-3">
-                <!-- Tasks will be injected here -->
-            </div>
+            <h3 class="text-lg font-bold text-emerald-500 mb-6 flex items-center gap-2">📋 Daily Checklist</h3>
+            <div id="tasks-container" class="space-y-3"></div>
         </div>
     </div>
 
@@ -95,7 +97,7 @@
             projectId: "winter-arc-ba20e",
             storageBucket: "winter-arc-ba20e.appspot.com",
             messagingSenderId: "564956254415",
-            appId: "PASTE_YOUR_WEB_APP_ID_HERE"
+            appId: "1:564956254415:web:YOUR_ACTUAL_APP_ID" // <- APNI WEB APP ID YAHAN DAALEIN
         };
 
         const app = initializeApp(firebaseConfig);
@@ -138,17 +140,7 @@
                 let rank = 1;
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    tbody.innerHTML += `
-                        <tr class="leaderboard-row border-b border-white/5">
-                            <td class="py-3 font-bold">#${rank}</td>
-                            <td class="py-3 flex items-center gap-2">
-                                <div class="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center text-[10px] text-blue-400 border border-blue-500/20">${data.name.charAt(0)}</div>
-                                <span>${data.name}</span>
-                            </td>
-                            <td class="py-3 text-right text-orange-400 font-bold">${data.streak} 🔥</td>
-                            <td class="py-3 text-right font-black text-white">${data.points}</td>
-                        </tr>
-                    `;
+                    tbody.innerHTML += `<tr class="leaderboard-row border-b border-white/5"><td class="py-3 font-bold">#${rank}</td><td class="py-3">${data.name}</td><td class="py-3 text-right text-orange-400">${data.streak} 🔥</td><td class="py-3 text-right font-black">${data.points}</td></tr>`;
                     rank++;
                 });
             });
@@ -159,7 +151,7 @@
                 if (snapshot.exists()) {
                     const data = snapshot.data();
                     document.getElementById('user-name').innerText = data.name;
-                    document.getElementById('user-initial').innerText = data.name.charAt(0).toUpperCase();
+                    document.getElementById('user-initial').innerText = data.name.charAt(0);
                     document.getElementById('user-points').innerText = data.points;
                     document.getElementById('user-streak').innerText = data.streak + " Days";
                     renderTasks(data.dailyTaskCounts || {});
@@ -181,29 +173,17 @@
                 const isActive = currentMins >= startMins && currentMins <= endMins;
                 const isExpired = currentMins > endMins && !isCompleted;
                 let cardClass = isCompleted ? "task-completed" : isActive ? "task-active" : isExpired ? "task-expired" : "";
-                container.innerHTML += `
-                    <div class="task-card glass-card ${cardClass} p-4 rounded-xl flex justify-between items-center">
-                        <div>
-                            <h4 class="text-sm font-medium ${isCompleted ? 'text-gray-500' : 'text-white'}">${rule.text}</h4>
-                            <p class="text-[10px] text-gray-400 mt-1">${rule.start} - ${rule.end}</p>
-                        </div>
-                        ${isCompleted ? '<span class="text-emerald-500 font-bold text-[10px]">✓</span>' : isActive ? '<span class="text-emerald-500 font-black text-[10px] animate-pulse">ACTIVE</span>' : ''}
-                    </div>
-                `;
+                container.innerHTML += `<div class="task-card glass-card ${cardClass} p-4 rounded-xl flex justify-between items-center text-sm"><div><h4>${rule.text}</h4><p class="text-[10px] text-gray-400">${rule.start} - ${rule.end}</p></div>${isCompleted ? '✓' : isActive ? 'ACTIVE' : ''}</div>`;
             });
         }
 
         function updateTimer() {
-            const now = new Date();
             const target = new Date(2026, 8, 1);
-            const diff = target - now;
+            const diff = target - new Date();
             if (diff > 0) {
-                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-                const mins = Math.floor((diff / (1000 * 60)) % 60);
-                const secs = Math.floor((diff / 1000) % 60);
-                document.getElementById('countdown-timer').innerText = `${days}d : ${hours}h : ${mins}m : ${secs}s`;
-            } else { document.getElementById('countdown-timer').innerText = "CHALLENGE IS LIVE!"; }
+                const d = Math.floor(diff/86400000); const h = Math.floor((diff/3600000)%24); const m = Math.floor((diff/60000)%60); const s = Math.floor((diff/1000)%60);
+                document.getElementById('countdown-timer').innerText = `${d}d : ${h}h : ${m}m : ${s}s`;
+            } else document.getElementById('countdown-timer').innerText = "LIVE!";
         }
         setInterval(updateTimer, 1000);
     </script>
