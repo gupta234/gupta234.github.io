@@ -6,6 +6,7 @@
     <title>Winter Arc Dashboard</title>
     
     <!-- GOOGLE ADSENSE VERIFICATION CODE (As per your screenshot) -->
+    <!-- NOTE: Replace data-ad-slot value with the numeric slot ID you get from AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6551032201404007"
      crossorigin="anonymous"></script>
 
@@ -39,7 +40,7 @@
             <ins class="adsbygoogle"
                  style="display:block"
                  data-ad-client="ca-pub-6551032201404007"
-                 data-ad-slot="default" 
+                 data-ad-slot="1234567890"
                  data-ad-format="auto"
                  data-full-width-responsive="true"></ins>
             <script>
@@ -140,7 +141,7 @@
                 let rank = 1;
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    tbody.innerHTML += `<tr class="leaderboard-row border-b border-white/5"><td class="py-3 font-bold">#${rank}</td><td class="py-3">${data.name}</td><td class="py-3 text-right text-orange-400">${data.streak} 🔥</td><td class="py-3 text-right font-black">${data.points}</td></tr>`;
+                    tbody.innerHTML += `<tr class="leaderboard-row border-b border-white/5"><td class="py-3 font-bold">#${rank}</td><td class="py-3">${data.name || 'Unknown'}</td><td class="py-3 text-right text-gray-300 font-bold">${data.points || 0}</td></tr>`;
                     rank++;
                 });
             });
@@ -150,10 +151,10 @@
             onSnapshot(doc(db, "users", uid), (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.data();
-                    document.getElementById('user-name').innerText = data.name;
-                    document.getElementById('user-initial').innerText = data.name.charAt(0);
-                    document.getElementById('user-points').innerText = data.points;
-                    document.getElementById('user-streak').innerText = data.streak + " Days";
+                    document.getElementById('user-name').innerText = data.name || 'Warrior';
+                    document.getElementById('user-initial').innerText = (data.name || '?').charAt(0);
+                    document.getElementById('user-points').innerText = data.points || 0;
+                    document.getElementById('user-streak').innerText = (data.streak || 0) + " Days";
                     renderTasks(data.dailyTaskCounts || {});
                 }
             });
@@ -169,11 +170,13 @@
                 const [eH, eM] = rule.end.split(':').map(Number);
                 const startMins = sH * 60 + sM;
                 const endMins = eH * 60 + eM;
-                const isCompleted = completedTasks[rule.id] > 0;
+                const isCompleted = (completedTasks[rule.id] || 0) > 0;
                 const isActive = currentMins >= startMins && currentMins <= endMins;
                 const isExpired = currentMins > endMins && !isCompleted;
                 let cardClass = isCompleted ? "task-completed" : isActive ? "task-active" : isExpired ? "task-expired" : "";
-                container.innerHTML += `<div class="task-card glass-card ${cardClass} p-4 rounded-xl flex justify-between items-center text-sm"><div><h4>${rule.text}</h4><p class="text-[10px] text-gray-400">${rule.start} - ${rule.end}</p></div>${isCompleted ? '✓' : isActive ? 'ACTIVE' : ''}</div>`;
+                const statusText = isCompleted ? 'Done' : isActive ? 'Active' : isExpired ? 'Missed' : 'Pending';
+
+                container.innerHTML += `<div class="task-card glass-card ${cardClass} p-4 rounded-xl flex justify-between items-center text-sm"><div><h4 class="font-bold">${rule.text}</h4><p class="text-[10px] text-gray-400">${rule.start} - ${rule.end}</p></div><div class="text-right"><p class="text-sm font-bold text-gray-200">${statusText}</p></div></div>`;
             });
         }
 
