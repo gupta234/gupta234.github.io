@@ -2,114 +2,86 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Winter Arc Dashboard</title>
-    
-    <!-- ADSENSE -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6551032201404007" crossorigin="anonymous"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Winter Arc</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <style>
-        body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; }
-        .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .task-card { transition: all 0.2s; border-left: 4px solid transparent; }
-        .task-completed { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
-        .task-active { border-left-color: #22c55e; background: rgba(34, 197, 94, 0.1); }
-        .task-expired { border-left-color: #ef4444; background: rgba(239, 68, 68, 0.1); opacity: 0.6; }
-        #chat-window { transition: all 0.3s ease; transform: translateY(20px); opacity: 0; pointer-events: none; }
+        body { background: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; font-size: 11px; overflow-x: hidden; }
+        .glass { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        .task-card { border-left: 3px solid transparent; transition: 0.2s; margin-bottom: 6px; padding: 10px; }
+        .done { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.05); }
+        #chat-window { position: fixed; bottom: 80px; right: 20px; width: 280px; height: 380px; z-index: 100; transition: 0.3s; transform: translateY(20px); opacity: 0; pointer-events: none; }
         #chat-window.active { transform: translateY(0); opacity: 1; pointer-events: all; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .chat-bubble { padding: 8px 12px; border-radius: 12px; max-width: 85%; margin-bottom: 8px; font-size: 10px; line-height: 1.4; }
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-4 flex flex-col items-center">
 
-    <!-- LOADING SCREEN -->
-    <div id="loading-section" class="flex flex-col items-center justify-center h-screen text-center">
-        <h1 class="text-5xl font-black mb-4 text-blue-500 italic animate-pulse">WINTER ARC</h1>
-        <p class="text-gray-500 text-sm">Checking Warrior Status...</p>
-    </div>
-
-    <!-- AUTH SECTION -->
-    <div id="auth-section" class="hidden flex flex-col items-center justify-center h-screen text-center">
-        <h1 class="text-5xl font-black mb-4 text-blue-500 italic">WINTER ARC</h1>
-        <button id="login-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-full font-bold shadow-lg transition">Login with Google</button>
-    </div>
-
-    <!-- MAIN DASHBOARD -->
-    <div id="dashboard-section" class="hidden max-w-2xl mx-auto space-y-6 pb-24">
+    <!-- COMPACT DASHBOARD -->
+    <div class="w-full max-w-sm space-y-4 pb-20">
         <div class="flex justify-between items-center">
-            <h2 class="text-3xl font-black italic text-blue-400">WINTER ARC</h2>
-            <button id="logout-btn" class="text-[10px] text-red-400 opacity-50 border border-red-400/30 px-2 py-1 rounded">Logout</button>
+            <h1 class="text-base font-black italic text-blue-500 tracking-tighter uppercase">Winter Arc</h1>
+            <button id="logout-btn" class="text-[8px] text-red-500 opacity-40 uppercase font-bold">Logout</button>
         </div>
 
-        <!-- Banner Ad -->
-        <div class="glass-card p-2 rounded-2xl overflow-hidden min-h-[90px] flex items-center justify-center bg-white/5">
-            <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6551032201404007" data-ad-slot="1234567890" data-ad-format="auto" data-full-width-responsive="true"></ins>
-            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-        </div>
-
-        <!-- Timer -->
-        <div class="bg-emerald-600/10 border border-emerald-500/30 p-6 rounded-2xl text-center">
-            <p class="text-gray-400 text-[10px] font-bold tracking-widest uppercase mb-2">Challenge Starts In</p>
-            <h3 id="countdown-timer" class="text-xl md:text-2xl font-mono font-black text-emerald-500">00d : 00h : 00m : 00s</h3>
-        </div>
-
-        <!-- Profile Section -->
-        <div class="glass-card p-6 rounded-2xl flex items-center justify-between border-l-4 border-blue-500 shadow-2xl">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-xl font-bold text-blue-400" id="user-initial">?</div>
+        <!-- PROFILE CARD (SMALLER) -->
+        <div class="glass p-4 rounded-2xl border-l-4 border-blue-500 flex justify-between items-center shadow-xl">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center text-xl font-black text-blue-400" id="user-initial">W</div>
                 <div>
-                    <div class="flex items-center gap-2">
-                        <h3 id="user-name" class="font-bold">Warrior</h3>
-                        <button id="edit-name-btn" class="text-[9px] text-blue-400 border border-blue-400/30 px-1.5 py-0.5 rounded">Edit</button>
+                    <div class="flex items-center gap-1">
+                        <span id="user-name" class="font-bold text-xs truncate max-w-[80px]">Warrior</span>
+                        <button id="edit-name-btn" class="text-[7px] text-blue-400 border border-blue-400/20 px-1 rounded">Edit</button>
                     </div>
-                    <p class="text-sm text-yellow-500 font-bold"><span id="user-points">0</span> Points</p>
+                    <div class="text-[9px] text-yellow-500 font-black tracking-widest"><span id="user-points">0</span> PTS</div>
                 </div>
             </div>
             <div class="text-right">
-                <p class="text-[10px] text-gray-500 uppercase font-bold">Streak 🔥</p>
-                <p id="user-streak" class="text-2xl font-black text-orange-500">0 Days</p>
+                <div class="text-[7px] text-gray-500 font-black uppercase">Streak 🔥</div>
+                <div id="user-streak" class="text-base font-black text-orange-500">0 Days</div>
             </div>
         </div>
 
-        <!-- Leaderboard -->
-        <div class="glass-card p-6 rounded-2xl">
-            <h3 class="text-sm font-bold text-yellow-500 uppercase mb-4 flex items-center gap-2"><span>🏆</span> Top Warriors</h3>
-            <table class="w-full text-left text-sm"><tbody id="leaderboard-body"></tbody></table>
+        <!-- ADS -->
+        <div class="glass p-1 rounded-xl min-h-[50px] flex items-center justify-center text-[7px] text-gray-700">
+            <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6551032201404007" data-ad-slot="1234567890" data-ad-format="auto"></ins>
+            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
         </div>
 
-        <!-- Checklist -->
-        <div class="glass-card p-6 rounded-2xl">
-            <h3 class="text-lg font-bold text-emerald-500 mb-6 flex items-center gap-2 uppercase">📋 Daily Checklist</h3>
-            <div id="tasks-container" class="space-y-3"></div>
+        <!-- LEADERBOARD (MINI) -->
+        <div class="glass p-3 rounded-2xl">
+            <h3 class="text-[9px] font-black text-yellow-500 uppercase mb-2 tracking-widest">🏆 Top Warriors</h3>
+            <table class="w-full text-left text-[9px]"><tbody id="leaderboard-body"></tbody></table>
+        </div>
+
+        <!-- CHECKLIST -->
+        <h3 class="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-4">📋 Daily Checklist</h3>
+        <div id="tasks-container" class="space-y-1"></div>
+    </div>
+
+    <!-- AI CHAT WINDOW -->
+    <div id="chat-window" class="glass rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-blue-500/20">
+        <div class="bg-blue-600/10 p-3 border-b border-white/5 flex justify-between items-center">
+            <span class="font-black italic text-blue-400 text-[10px]">ARC COACH AI</span>
+        </div>
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-3 flex flex-col">
+            <div class="chat-bubble self-start bg-white/5 text-gray-300">Warrior, focus karo. Kya help chahiye?</div>
+        </div>
+        <div class="p-2 bg-slate-900/50 flex gap-2 border-t border-white/5">
+            <input type="text" id="chat-input" placeholder="Ask coach..." class="flex-1 bg-white/5 rounded-lg px-3 py-1.5 text-[10px] focus:outline-none border border-white/5">
+            <button id="send-btn" class="bg-blue-600 px-3 rounded-lg text-xs">➤</button>
         </div>
     </div>
 
-    <!-- FLOATING AI COACH (SIMPLE VERSION) -->
-    <div class="fixed bottom-6 right-6 z-50">
-        <div id="chat-window" class="absolute bottom-16 right-0 w-80 h-96 glass-card rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-blue-500/30">
-            <div class="bg-blue-600/20 p-4 border-b border-white/10 flex justify-between items-center">
-                <span class="font-bold text-blue-400 italic">ARC COACH AI</span>
-                <span class="text-[9px] text-emerald-500 font-bold animate-pulse">LIVE</span>
-            </div>
-            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 text-[11px]">
-                <div class="bg-white/5 p-3 rounded-lg self-start">Kaise ho Warrior? Winter Arc mein rukna mana hai! ⚡</div>
-            </div>
-            <div class="p-3 bg-white/5 border-t border-white/10 flex gap-2">
-                <input type="text" id="chat-input" placeholder="Ask coach..." class="flex-1 bg-transparent border border-white/10 rounded-full px-4 py-2 text-xs focus:outline-none">
-                <button id="send-btn" class="bg-blue-600 p-2 rounded-full hover:bg-blue-700 transition">➤</button>
-            </div>
-        </div>
-        <button id="chat-toggle" class="bg-blue-600 w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition active:scale-95">
-            <span class="text-2xl">🤖</span>
-        </button>
-    </div>
+    <!-- FLOAT BUTTON -->
+    <button id="chat-toggle" class="fixed bottom-6 right-6 bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 z-50 text-xl">🤖</button>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, collection, query, orderBy, limit, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, collection, query, orderBy, limit, getDoc, setDoc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCZqTzcU4kK5nkEkB1UcBQlMA-lOv0EPl0",
@@ -125,29 +97,22 @@
         const db = getFirestore(app);
 
         let userProfile = null;
-        let activeRules = [];
+        let rules = [];
 
         onAuthStateChanged(auth, async (user) => {
-            document.getElementById('loading-section').classList.add('hidden');
             if (user) {
                 await syncUser(user);
-                document.getElementById('auth-section').classList.add('hidden');
-                document.getElementById('dashboard-section').classList.remove('hidden');
-                
-                // Firestore Listeners
-                onSnapshot(doc(db, "config", "active_challenge"), (s) => { activeRules = s.data().rules || []; renderTasks(); });
+                onSnapshot(doc(db, "config", "active_challenge"), (s) => { rules = s.data().rules || []; updateUI(); });
                 onSnapshot(doc(db, "users", user.uid), (s) => { 
                     userProfile = s.data(); 
+                    document.getElementById('user-points').innerText = userProfile.points;
+                    document.getElementById('user-streak').innerText = userProfile.streak;
                     document.getElementById('user-name').innerText = userProfile.name;
                     document.getElementById('user-initial').innerText = userProfile.name.charAt(0).toUpperCase();
-                    document.getElementById('user-points').innerText = userProfile.points;
-                    document.getElementById('user-streak').innerText = userProfile.streak + " Days";
-                    renderTasks(); 
+                    updateUI(); 
                 });
-                setupLeaderboard();
-            } else {
-                document.getElementById('auth-section').classList.remove('hidden');
-            }
+                syncRanks();
+            } else { signInWithPopup(auth, new GoogleAuthProvider()); }
         });
 
         async function syncUser(user) {
@@ -156,80 +121,69 @@
             if (!s.exists()) await setDoc(ref, { uid: user.uid, name: user.displayName || "Warrior", points: 0, streak: 0, dailyTaskCounts: {} });
         }
 
-        function renderTasks() {
+        function updateUI() {
             const container = document.getElementById('tasks-container');
-            if (!activeRules.length) return;
+            if(!rules.length) return;
             container.innerHTML = '';
             const today = new Date().getDate().toString();
-            const now = new Date().getHours() * 60 + new Date().getMinutes();
             const count = (userProfile?.dailyTaskCounts || {})[today] || 0;
-
-            activeRules.forEach((rule, i) => {
-                const isDone = i < count;
-                container.innerHTML += `<div class="task-card glass-card ${isDone ? 'task-completed' : ''} p-4 rounded-xl flex justify-between items-center text-xs"><div><h4 class="font-bold">${rule.text}</h4><p class="text-[9px] text-gray-500">${rule.startTime} - ${rule.endTime}</p></div><div class="font-black text-[9px]">${isDone ? '✓ DONE' : 'WAIT'}</div></div>`;
+            rules.forEach((r, i) => {
+                const done = i < count;
+                container.innerHTML += `<div class="task-card glass rounded-xl flex justify-between items-center ${done ? 'done' : ''}"><div class="font-bold text-gray-300 uppercase text-[10px]">${r.text}</div><div class="text-[9px] font-black opacity-40">${done ? '✓' : 'WAIT'}</div></div>`;
             });
         }
 
         async function askCoach() {
-            const input = document.getElementById('chat-input');
-            const msg = input.value.trim();
-            if (!msg || !userProfile) return;
+            const i = document.getElementById('chat-input');
+            const msg = i.value.trim();
+            if(!msg || !userProfile) return;
             
             appendMsg(msg, true);
-            input.value = '';
+            i.value = '';
             const loaderId = 'L-' + Date.now();
-            appendMsg("Coach is thinking...", false, loaderId);
+            appendMsg("...", false, loaderId);
 
             try {
-                // FIXED AI REQUEST
+                // FIXED PROXY CALL (Direct Groq might be CORS blocked)
                 const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
-                    headers: { 'Authorization': 'Bearer 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', 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Authorization': 'Bearer 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',
+                        'Content-Type': 'application/json' 
+                    },
                     body: JSON.stringify({
-                        model: "llama3-70b-8192", 
-                        messages: [{ role: "user", content: `You are ARC COACH. Talk in Hinglish as aggressive coach. User ${userProfile.name}. Message: ${msg}` }]
+                        model: "llama3-8b-8192", 
+                        messages: [{ role: "user", content: `Speak Hinglish as ARC COACH. User: ${userProfile.name}. Msg: ${msg}` }]
                     })
                 });
-                const data = await res.json();
-                document.getElementById(loaderId).innerText = data.choices[0].message.content;
-            } catch (e) { document.getElementById(loaderId).innerText = "Coach Offline hai!"; }
+                const d = await res.json();
+                document.getElementById(loaderId).innerText = d.choices[0].message.content;
+            } catch (e) { document.getElementById(loaderId).innerText = "Coach is busy (CORS/Key). Try App!"; }
         }
 
         function appendMsg(t, u, id) {
             const d = document.createElement('div');
-            d.className = u ? "bg-blue-600 p-2 rounded-lg self-end max-w-[80%]" : "bg-white/10 p-2 rounded-lg self-start max-w-[80%] border border-white/5";
+            d.className = `chat-bubble ${u ? 'self-end bg-blue-600' : 'self-start bg-white/10 border border-white/5'}`;
             if(id) d.id = id;
             d.innerText = t;
-            document.getElementById('chat-messages').appendChild(d);
-            const m = document.getElementById('chat-messages'); m.scrollTop = m.scrollHeight;
+            const c = document.getElementById('chat-messages'); c.appendChild(d); c.scrollTop = c.scrollHeight;
         }
 
-        function setupLeaderboard() {
-            onSnapshot(query(collection(db, "users"), orderBy("points", "desc"), limit(10)), (snap) => {
+        function syncRanks() {
+            onSnapshot(query(collection(db, "users"), orderBy("points", "desc"), limit(5)), (snap) => {
                 const b = document.getElementById('leaderboard-body'); b.innerHTML = '';
                 let r = 1; snap.forEach(d => {
-                    b.innerHTML += `<tr class="border-b border-white/5"><td class="py-3 px-2 font-bold text-blue-500 w-8">#${r}</td><td>${d.data().name}</td><td class="text-right px-2 font-black opacity-60">${d.data().points} P</td></tr>`;
+                    b.innerHTML += `<tr class="border-b border-white/5"><td class="py-2 text-blue-500 font-bold">#${r}</td><td class="font-bold text-gray-300">${d.data().name}</td><td class="text-right font-black opacity-40">${d.data().points} P</td></tr>`;
                     r++;
                 });
             });
         }
 
-        function updateTimer() {
-            const target = new Date(2026, 8, 1);
-            const diff = target - new Date();
-            if (diff > 0) {
-                const d = Math.floor(diff/86400000); const h = Math.floor((diff/3600000)%24); const m = Math.floor((diff/60000)%60); const s = Math.floor((diff/1000)%60);
-                document.getElementById('countdown-timer').innerText = `${d}d : ${h}h : ${m}m : ${s}s`;
-            } else document.getElementById('countdown-timer').innerText = "LIVE!";
-        }
-        
         document.getElementById('chat-toggle').onclick = () => document.getElementById('chat-window').classList.toggle('active');
         document.getElementById('send-btn').onclick = askCoach;
-        document.getElementById('chat-input').onkeydown = (e) => { if(e.key==='Enter') askCoach(); };
-        document.getElementById('login-btn').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
-        document.getElementById('logout-btn').onclick = () => signOut(auth);
         document.getElementById('edit-name-btn').onclick = async () => { const n = prompt("Name:", userProfile.name); if(n) await updateDoc(doc(db, "users", auth.currentUser.uid), { name: n.trim() }); };
-        setInterval(updateTimer, 1000); updateTimer();
+        document.getElementById('logout-btn').onclick = () => signOut(auth);
+        document.getElementById('chat-input').onkeydown = (e) => { if(e.key==='Enter') askCoach(); };
     </script>
 </body>
 </html>
