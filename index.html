@@ -1,102 +1,270 @@
-// ... (Head aur Style section same rahega) ...
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winter Arc Dashboard</title>
+    
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6551032201404007" crossorigin="anonymous"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .task-card { transition: all 0.2s; border-left: 4px solid transparent; }
+        .task-completed { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+        .task-active { border-left-color: #22c55e; background: rgba(34, 197, 94, 0.1); }
+        .task-expired { border-left-color: #ef4444; background: rgba(239, 68, 68, 0.1); opacity: 0.6; }
+        #chat-window { transition: all 0.3s ease; transform: translateY(20px); opacity: 0; pointer-events: none; }
+        #chat-window.active { transform: translateY(0); opacity: 1; pointer-events: all; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
 
-<script type="module">
-    // ... (Imports same rahenge) ...
+    <!-- LOADING SECTION -->
+    <div id="loading-section" class="flex flex-col items-center justify-center h-screen text-center">
+        <h1 class="text-5xl font-black mb-4 text-blue-500 italic animate-pulse">WINTER ARC</h1>
+        <p class="text-gray-500 text-sm">Syncing with Firestore...</p>
+    </div>
 
-    const firebaseConfig = {
-        // ... (Apni config daalein) ...
-    };
+    <!-- AUTH SECTION -->
+    <div id="auth-section" class="hidden flex flex-col items-center justify-center h-screen text-center">
+        <h1 class="text-5xl font-black mb-4 text-blue-500 italic">WINTER ARC</h1>
+        <p class="text-gray-400 mb-8 font-medium">Official Warrior Dashboard</p>
+        <button id="login-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-full font-bold shadow-lg transition transform hover:scale-105 active:scale-95">
+            Login with Google
+        </button>
+    </div>
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    <!-- DASHBOARD SECTION -->
+    <div id="dashboard-section" class="hidden max-w-2xl mx-auto space-y-6 pb-24">
+        <div class="flex justify-between items-center">
+            <h2 class="text-3xl font-black italic text-blue-400">WINTER ARC</h2>
+            <button id="logout-btn" class="text-[10px] text-red-400 opacity-50 border border-red-400/30 px-2 py-1 rounded">Logout</button>
+        </div>
 
-    // Global variables taaki rules aur user data sync rahein
-    let currentRules = []; 
-    let userTaskCounts = {};
+        <!-- Banner Ad -->
+        <div class="glass-card p-2 rounded-2xl overflow-hidden min-h-[90px] flex items-center justify-center bg-white/5">
+            <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6551032201404007" data-ad-slot="1234567890" data-ad-format="auto" data-full-width-responsive="true"></ins>
+            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        </div>
 
-    onAuthStateChanged(auth, async (user) => {
-        document.getElementById('loading-section').classList.add('hidden');
-        if (user) {
-            await ensureUserExists(user);
-            document.getElementById('auth-section').classList.add('hidden');
-            document.getElementById('dashboard-section').classList.remove('hidden');
-            
-            // 1. Listen to Firestore Rules (CONFIG)
-            listenToChallengeConfig();
-            
-            // 2. Listen to User Data
-            setupRealtimeUpdates(user.uid);
-            
-            setupLeaderboard();
-        } else {
-            document.getElementById('auth-section').classList.remove('hidden');
-            document.getElementById('dashboard-section').classList.add('hidden');
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 gap-4">
+            <div class="glass-card p-4 rounded-2xl border-l-4 border-blue-500">
+                <p class="text-[10px] text-gray-500 uppercase font-bold">Total Points</p>
+                <h3 id="user-points" class="text-2xl font-black text-blue-400">0</h3>
+            </div>
+            <div class="glass-card p-4 rounded-2xl border-l-4 border-orange-500 text-right">
+                <p class="text-[10px] text-gray-500 uppercase font-bold">Streak 🔥</p>
+                <h3 id="user-streak" class="text-2xl font-black text-orange-500">0 Days</h3>
+            </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="glass-card p-6 rounded-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-bold text-yellow-500 uppercase flex items-center gap-2"><span>🏆</span> Global Leaderboard</h3>
+                <span class="text-[10px] text-gray-500" id="total-warriors">Live</span>
+            </div>
+            <table class="w-full text-left text-sm">
+                <tbody id="leaderboard-body">
+                    <!-- Leaderboard rows injected here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Daily Checklist (SYNCED WITH FIRESTORE CONFIG) -->
+        <div class="glass-card p-6 rounded-2xl">
+            <h3 class="text-lg font-bold text-emerald-500 mb-6 flex items-center gap-2">📋 Daily Checklist</h3>
+            <div id="tasks-container" class="space-y-3 text-center py-10 text-gray-500 text-xs">
+                Fetching rules from Firestore...
+            </div>
+        </div>
+    </div>
+
+    <!-- AI COACH INTERFACE -->
+    <div class="fixed bottom-6 right-6 z-50">
+        <div id="chat-window" class="absolute bottom-16 right-0 w-80 h-96 glass-card rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-blue-500/30">
+            <div class="bg-blue-600/20 p-4 border-b border-white/10 flex justify-between items-center">
+                <span class="font-bold text-blue-400 italic">ARC COACH AI</span>
+                <span class="text-[10px] text-emerald-400">● Online</span>
+            </div>
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 text-[11px]">
+                <div class="bg-white/10 p-3 rounded-lg self-start max-w-[85%]">Kaise ho Warrior? Aaj ka kya plan hai? ⚡</div>
+            </div>
+            <div class="p-3 bg-white/5 border-t border-white/10 flex gap-2">
+                <input type="text" id="chat-input" placeholder="Ask coach anything..." class="flex-1 bg-transparent border border-white/10 rounded-full px-4 py-2 text-xs focus:outline-none focus:border-blue-500">
+                <button id="send-btn" class="bg-blue-600 p-2 rounded-full hover:bg-blue-700 transition">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                </button>
+            </div>
+        </div>
+        <button id="chat-toggle" class="bg-blue-600 w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition active:scale-95">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+        </button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, collection, query, orderBy, limit, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZqTzcU4kK5nkEkB1UcBQlMA-lOv0EPl0",
+            authDomain: "winter-arc-ba20e.firebaseapp.com",
+            projectId: "winter-arc-ba20e",
+            storageBucket: "winter-arc-ba20e.appspot.com",
+            messagingSenderId: "564956254415",
+            appId: "1:564956254415:web:YOUR_ACTUAL_APP_ID" // <- APNI WEB APP ID YAHAN DAALEIN
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentRules = [];
+        let userProfile = null;
+
+        // AUTH & SYNC
+        onAuthStateChanged(auth, async (user) => {
+            document.getElementById('loading-section').classList.add('hidden');
+            if (user) {
+                await ensureUserExists(user);
+                document.getElementById('auth-section').classList.add('hidden');
+                document.getElementById('dashboard-section').classList.remove('hidden');
+                
+                listenToConfig();
+                setupRealtimeUpdates(user.uid);
+                setupLeaderboard();
+            } else {
+                document.getElementById('auth-section').classList.remove('hidden');
+                document.getElementById('dashboard-section').classList.add('hidden');
+            }
+        });
+
+        async function ensureUserExists(user) {
+            const userRef = doc(db, "users", user.uid);
+            const snap = await getDoc(userRef);
+            if (!snap.exists()) {
+                await setDoc(userRef, { uid: user.uid, name: user.displayName || "Warrior", email: user.email || "", points: 0, streak: 0, dailyTaskCounts: {} });
+            }
         }
-    });
 
-    // FIREBASE SE RULES FETCH KARNE WALA FUNCTION
-    function listenToChallengeConfig() {
-        onSnapshot(doc(db, "config", "active_challenge"), (snapshot) => {
-            if (snapshot.exists()) {
-                const config = snapshot.data();
-                if (config.rules && config.rules.length > 0) {
-                    currentRules = config.rules; // Firestore ke rules yahan se milenge
-                    renderTasks(); // Rules milte hi UI update karo
+        // FETCH RULES FROM FIRESTORE
+        function listenToConfig() {
+            onSnapshot(doc(db, "config", "active_challenge"), (snapshot) => {
+                if (snapshot.exists()) {
+                    currentRules = snapshot.data().rules || [];
+                    renderTasks();
                 }
-            }
-        });
-    }
-
-    function setupRealtimeUpdates(uid) {
-        onSnapshot(doc(db, "users", uid), (snapshot) => {
-            if (snapshot.exists()) {
-                const data = snapshot.data();
-                userTaskCounts = data.dailyTaskCounts || {};
-                document.getElementById('user-points').innerText = data.points || 0;
-                document.getElementById('user-streak').innerText = (data.streak || 0) + " Days";
-                renderTasks(); // User data badalte hi UI update karo
-            }
-        });
-    }
-
-    function renderTasks() {
-        const container = document.getElementById('tasks-container');
-        if (!currentRules || currentRules.length === 0) {
-            container.innerHTML = '<p class="text-gray-500 text-center text-xs">Fetching rules from Firestore...</p>';
-            return;
+            });
         }
 
-        container.innerHTML = '';
-        const today = new Date().getDate().toString();
-        const currentMins = new Date().getHours() * 60 + new Date().getMinutes();
-        const completedCount = userTaskCounts[today] || 0;
+        function setupRealtimeUpdates(uid) {
+            onSnapshot(doc(db, "users", uid), (snapshot) => {
+                if (snapshot.exists()) {
+                    userProfile = snapshot.data();
+                    document.getElementById('user-points').innerText = userProfile.points || 0;
+                    document.getElementById('user-streak').innerText = (userProfile.streak || 0) + " Days";
+                    renderTasks();
+                }
+            });
+        }
 
-        currentRules.forEach((rule, index) => {
-            // Firestore data structure ke hisab se mapping (id, text, startTime, endTime)
-            const [sH, sM] = (rule.startTime || "00:00").split(':').map(Number);
-            const [eH, eM] = (rule.endTime || "00:00").split(':').map(Number);
-            const start = sH * 60 + sM;
-            const end = eH * 60 + eM;
+        function renderTasks() {
+            const container = document.getElementById('tasks-container');
+            if (!currentRules.length) return;
+
+            container.innerHTML = '';
+            const today = new Date().getDate().toString();
+            const currentMins = new Date().getHours() * 60 + new Date().getMinutes();
+            const completedCount = (userProfile?.dailyTaskCounts || {})[today] || 0;
+
+            currentRules.forEach((rule, index) => {
+                const [sH, sM] = (rule.startTime || "00:00").split(':').map(Number);
+                const [eH, eM] = (rule.endTime || "00:00").split(':').map(Number);
+                const start = sH * 60 + sM;
+                const end = eH * 60 + eM;
+                
+                const isCompleted = index < completedCount;
+                const isActive = currentMins >= start && currentMins <= end;
+                const isExpired = currentMins > end && !isCompleted;
+
+                let cls = isCompleted ? "task-completed" : isActive ? "task-active" : isExpired ? "task-expired" : "";
+                const statusText = isCompleted ? 'DONE' : isActive ? 'ACTIVE' : isExpired ? 'MISSED' : 'PENDING';
+
+                container.innerHTML += `
+                    <div class="task-card glass-card ${cls} p-4 rounded-xl flex justify-between items-center text-xs">
+                        <div>
+                            <h4 class="font-bold text-gray-100">${rule.text}</h4>
+                            <p class="text-[9px] text-gray-500 font-mono">${rule.startTime} - ${rule.endTime}</p>
+                        </div>
+                        <div class="font-black text-[9px] tracking-widest">${statusText}</div>
+                    </div>`;
+            });
+        }
+
+        // LEADERBOARD
+        function setupLeaderboard() {
+            onSnapshot(query(collection(db, "users"), orderBy("points", "desc"), limit(10)), (snap) => {
+                const tbody = document.getElementById('leaderboard-body');
+                tbody.innerHTML = '';
+                let rank = 1;
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    tbody.innerHTML += `<tr class="border-b border-white/5"><td class="py-2.5 font-bold text-blue-400">#${rank}</td><td class="py-2.5">${data.name || 'Warrior'}</td><td class="py-2.5 text-right font-black text-gray-300">${data.points || 0}</td></tr>`;
+                    rank++;
+                });
+            });
+        }
+
+        // AI COACH (GROQ)
+        const chatWindow = document.getElementById('chat-window');
+        const chatInput = document.getElementById('chat-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const sendBtn = document.getElementById('send-btn');
+        document.getElementById('chat-toggle').onclick = () => chatWindow.classList.toggle('active');
+
+        async function askCoach() {
+            const msg = chatInput.value.trim();
+            if (!msg || !userProfile) return;
             
-            // App logic: index-based completion ya rule.id-based
-            const isCompleted = index < completedCount; 
-            const isActive = currentMins >= start && currentMins <= end;
-            const isExpired = currentMins > end && !isCompleted;
+            appendMsg(msg, true);
+            chatInput.value = '';
+            const loaderId = 'L-' + Date.now();
+            appendMsg("Coach is thinking...", false, loaderId);
 
-            let cls = isCompleted ? "task-completed" : isActive ? "task-active" : isExpired ? "task-expired" : "";
-            const status = isCompleted ? 'DONE' : isActive ? 'ACTIVE' : isExpired ? 'MISSED' : 'PENDING';
+            try {
+                const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer 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', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: "llama3-70b-8192",
+                        messages: [{ role: "user", content: `You are ARC COACH. Talk in Hinglish like an aggressive fitness coach. User ${userProfile.name}, Streak ${userProfile.streak}. Question: ${msg}` }]
+                    })
+                });
+                const data = await res.json();
+                document.getElementById(loaderId).innerText = data.choices[0].message.content;
+            } catch (e) {
+                document.getElementById(loaderId).innerText = "Net check karo Warrior!";
+            }
+        }
 
-            container.innerHTML += `
-                <div class="task-card glass-card ${cls} p-4 rounded-xl flex justify-between items-center text-xs mb-3 border-l-4 border-transparent">
-                    <div>
-                        <h4 class="font-bold text-gray-100">${rule.text}</h4>
-                        <p class="text-[9px] text-gray-500 font-mono">${rule.startTime} - ${rule.endTime}</p>
-                    </div>
-                    <div class="font-black text-[9px] tracking-widest">${status}</div>
-                </div>`;
-        });
-    }
+        function appendMsg(text, isUser, id) {
+            const d = document.createElement('div');
+            d.className = isUser ? "bg-blue-600 p-2.5 rounded-xl self-end max-w-[85%] text-white" : "bg-white/10 p-2.5 rounded-xl self-start max-w-[85%] text-gray-200";
+            if(id) d.id = id;
+            d.innerText = text;
+            chatMessages.appendChild(d);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
 
-    // ... (AI Chat aur Leaderboard functions same rahenge) ...
-</script>
+        sendBtn.onclick = askCoach;
+        chatInput.onkeydown = (e) => { if(e.key==='Enter') askCoach(); };
+        document.getElementById('login-btn').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
+        document.getElementById('logout-btn').onclick = () => signOut(auth);
+    </script>
+</body>
+</html>
