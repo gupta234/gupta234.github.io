@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Winter Arc Dashboard</title>
     
+    <!-- ADSENSE CODE -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6551032201404007" crossorigin="anonymous"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
         body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
         .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
@@ -22,83 +24,90 @@
 </head>
 <body class="p-4 md:p-8">
 
-    <!-- LOADING SCREEN -->
+    <!-- 1. LOADING SCREEN -->
     <div id="loading-section" class="flex flex-col items-center justify-center h-screen text-center">
-        <h1 class="text-5xl font-black mb-4 text-blue-500 italic animate-pulse">WINTER ARC</h1>
-        <p class="text-gray-500 text-sm">Loading Warrior Profile...</p>
+        <h1 class="text-5xl font-black mb-4 text-blue-500 italic animate-pulse uppercase">Winter Arc</h1>
+        <p class="text-gray-500 text-sm tracking-widest">SYNCING WARRIOR DATA...</p>
     </div>
 
-    <!-- LOGIN SCREEN -->
+    <!-- 2. AUTH SECTION -->
     <div id="auth-section" class="hidden flex flex-col items-center justify-center h-screen text-center">
-        <h1 class="text-5xl font-black mb-4 text-blue-500 italic">WINTER ARC</h1>
-        <button id="login-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-full font-bold shadow-lg transition">Login with Google</button>
+        <h1 class="text-5xl font-black mb-4 text-blue-500 italic uppercase">Winter Arc</h1>
+        <p class="text-gray-400 mb-8 font-medium">Official Web Dashboard</p>
+        <button id="login-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+            Login with Google
+        </button>
     </div>
 
-    <!-- DASHBOARD -->
+    <!-- 3. DASHBOARD SECTION -->
     <div id="dashboard-section" class="hidden max-w-2xl mx-auto space-y-6 pb-24">
         <div class="flex justify-between items-center">
             <h2 class="text-3xl font-black italic text-blue-400">WINTER ARC</h2>
             <button id="logout-btn" class="text-[10px] text-red-400 border border-red-400/20 px-2 py-1 rounded">Logout</button>
         </div>
 
-        <!-- ADS -->
-        <div class="glass-card p-2 rounded-2xl overflow-hidden min-h-[90px] flex items-center justify-center bg-white/5 text-[10px] text-gray-600">
+        <!-- Banner Ad -->
+        <div class="glass-card p-2 rounded-2xl min-h-[90px] flex items-center justify-center bg-white/5">
             <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6551032201404007" data-ad-slot="1234567890" data-ad-format="auto" data-full-width-responsive="true"></ins>
             <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
         </div>
 
-        <!-- PROFILE SECTION (RE-ADDED) -->
+        <!-- User Stats & Profile -->
         <div class="glass-card p-6 rounded-2xl flex items-center justify-between border-l-4 border-blue-500">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-xl font-bold text-blue-400" id="user-initial">?</div>
+                <div class="w-14 h-14 rounded-full bg-blue-500/20 flex items-center justify-center text-2xl font-bold text-blue-400" id="user-initial">?</div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h3 id="user-name" class="font-bold">Warrior</h3>
-                        <button id="edit-name-btn" class="text-[9px] text-blue-400 border border-blue-400/30 px-1.5 py-0.5 rounded hover:bg-blue-400/10">Edit</button>
+                        <h3 id="user-name" class="text-xl font-bold">Warrior</h3>
+                        <button id="edit-name-btn" class="text-[9px] text-blue-400 border border-blue-400/30 px-2 py-1 rounded">Edit</button>
                     </div>
                     <p class="text-sm text-yellow-500 font-bold"><span id="user-points">0</span> Points</p>
                 </div>
             </div>
             <div class="text-right">
-                <p class="text-[10px] text-gray-500 uppercase">Streak 🔥</p>
-                <p id="user-streak" class="text-xl font-black text-orange-500">0 Days</p>
+                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Current Streak</p>
+                <p id="user-streak" class="text-2xl font-black text-orange-500">0 Days</p>
             </div>
         </div>
 
-        <!-- Leaderboard -->
+        <!-- Global Leaderboard -->
         <div class="glass-card p-6 rounded-2xl">
-            <h3 class="text-sm font-bold text-yellow-500 uppercase mb-4">🏆 Top 10 Warriors</h3>
+            <h3 class="text-sm font-bold text-yellow-500 uppercase mb-4 flex items-center gap-2"><span>🏆</span> Top Warriors</h3>
             <table class="w-full text-left text-sm"><tbody id="leaderboard-body"></tbody></table>
         </div>
 
-        <!-- Checklist -->
+        <!-- Daily Checklist -->
         <div class="glass-card p-6 rounded-2xl">
-            <h3 class="text-lg font-bold text-emerald-500 mb-6 flex items-center gap-2">📋 Daily Checklist</h3>
+            <h3 class="text-lg font-bold text-emerald-500 mb-6 flex items-center gap-2">📋 Checklist (Live Sync)</h3>
             <div id="tasks-container" class="space-y-3"></div>
         </div>
     </div>
 
-    <!-- AI COACH (Updated Logic) -->
+    <!-- AI COACH (Persistent Chat) -->
     <div class="fixed bottom-6 right-6 z-50">
-        <div id="chat-window" class="absolute bottom-16 right-0 w-80 h-[450px] glass-card rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-blue-500/30">
+        <div id="chat-window" class="absolute bottom-16 right-0 w-80 h-[450px] glass-card rounded-3xl flex flex-col shadow-2xl overflow-hidden border border-blue-500/30">
             <div class="bg-blue-600/20 p-4 border-b border-white/10 flex justify-between items-center">
-                <span class="font-bold text-blue-400 italic">ARC COACH AI</span>
+                <span class="font-bold text-blue-400 italic tracking-widest">ARC COACH AI</span>
+                <span class="text-[9px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">ACTIVE</span>
             </div>
-            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 text-[11px]">
-                <div class="bg-white/5 p-3 rounded-lg self-start">Kaise ho Warrior? Winter Arc ki tayaari kaisi hai?</div>
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 text-[11px]">
+                <!-- History loaded here -->
             </div>
             <div class="p-3 bg-white/5 border-t border-white/10 flex gap-2">
-                <input type="text" id="chat-input" placeholder="Ask coach..." class="flex-1 bg-transparent border border-white/10 rounded-full px-4 py-2 text-xs focus:outline-none">
-                <button id="send-btn" class="bg-blue-600 p-2 rounded-full">➤</button>
+                <input type="text" id="chat-input" placeholder="Ask anything, Warrior..." class="flex-1 bg-transparent border border-white/10 rounded-full px-4 py-2.5 text-xs focus:outline-none focus:border-blue-500">
+                <button id="send-btn" class="bg-blue-600 p-2.5 rounded-full hover:bg-blue-700 transition transform active:scale-90">➤</button>
             </div>
         </div>
-        <button id="chat-toggle" class="bg-blue-600 w-14 h-14 rounded-full flex items-center justify-center shadow-lg text-2xl">🤖</button>
+        <button id="chat-toggle" class="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition relative">
+            <span class="text-2xl">🤖</span>
+            <span class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-slate-900 rounded-full animate-ping"></span>
+        </button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, collection, query, orderBy, limit, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, collection, query, orderBy, limit, getDoc, setDoc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCZqTzcU4kK5nkEkB1UcBQlMA-lOv0EPl0",
@@ -106,16 +115,17 @@
             projectId: "winter-arc-ba20e",
             storageBucket: "winter-arc-ba20e.appspot.com",
             messagingSenderId: "564956254415",
-            appId: "1:564956254415:web:YOUR_ACTUAL_APP_ID"
+            appId: "1:564956254415:web:YOUR_ACTUAL_APP_ID" // <- APNI ID DAALEIN
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let userProfileData = null;
+        let userProfile = null;
         let activeRules = [];
 
+        // AUTH & SYNC
         onAuthStateChanged(auth, async (user) => {
             document.getElementById('loading-section').classList.add('hidden');
             if (user) {
@@ -123,26 +133,25 @@
                 document.getElementById('auth-section').classList.add('hidden');
                 document.getElementById('dashboard-section').classList.remove('hidden');
                 
-                // Fetch Rules
-                onSnapshot(doc(db, "config", "active_challenge"), (snap) => {
-                    if(snap.exists()) {
-                        activeRules = snap.data().rules || [];
-                        renderChecklist();
+                // 1. Sync Rules (App Config)
+                onSnapshot(doc(db, "config", "active_challenge"), (s) => {
+                    if(s.exists()) { activeRules = s.data().rules || []; renderTasks(); }
+                });
+
+                // 2. Sync User Data (Points, Streak, Checklist)
+                onSnapshot(doc(db, "users", user.uid), (s) => {
+                    if(s.exists()) {
+                        userProfile = s.data();
+                        document.getElementById('user-name').innerText = userProfile.name;
+                        document.getElementById('user-initial').innerText = userProfile.name.charAt(0).toUpperCase();
+                        document.getElementById('user-points').innerText = userProfile.points;
+                        document.getElementById('user-streak').innerText = userProfile.streak + " Days";
+                        renderTasks();
                     }
                 });
 
-                // Fetch User
-                onSnapshot(doc(db, "users", user.uid), (snap) => {
-                    if(snap.exists()) {
-                        userProfileData = snap.data();
-                        document.getElementById('user-name').innerText = userProfileData.name || 'Warrior';
-                        document.getElementById('user-initial').innerText = (userProfileData.name || 'W').charAt(0).toUpperCase();
-                        document.getElementById('user-points').innerText = userProfileData.points || 0;
-                        document.getElementById('user-streak').innerText = (userProfileData.streak || 0) + " Days";
-                        renderChecklist();
-                    }
-                });
-                
+                // 3. Sync Chat History
+                listenToChatHistory(user.uid);
                 setupLeaderboard();
             } else {
                 document.getElementById('auth-section').classList.remove('hidden');
@@ -152,104 +161,111 @@
 
         async function ensureUserExists(user) {
             const userRef = doc(db, "users", user.uid);
-            const snap = await getDoc(userRef);
-            if (!snap.exists()) {
+            const s = await getDoc(userRef);
+            if (!s.exists()) {
                 await setDoc(userRef, { uid: user.uid, name: user.displayName || "Warrior", points: 0, streak: 0, dailyTaskCounts: {} });
             }
         }
 
-        function renderChecklist() {
+        function renderTasks() {
             const container = document.getElementById('tasks-container');
             if (!activeRules.length) return;
             container.innerHTML = '';
             const today = new Date().getDate().toString();
-            const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
-            const count = (userProfileData?.dailyTaskCounts || {})[today] || 0;
+            const now = new Date().getHours() * 60 + new Date().getMinutes();
+            const count = (userProfile?.dailyTaskCounts || {})[today] || 0;
 
             activeRules.forEach((rule, i) => {
                 const [sH, sM] = (rule.startTime || "00:00").split(':').map(Number);
                 const [eH, eM] = (rule.endTime || "00:00").split(':').map(Number);
                 const isDone = i < count;
-                const isActive = nowMins >= (sH*60+sM) && nowMins <= (eH*60+eM);
-                const isMissed = nowMins > (eH*60+eM) && !isDone;
+                const isActive = now >= (sH*60+sM) && now <= (eH*60+eM);
+                const isMissed = now > (eH*60+eM) && !isDone;
                 let cls = isDone ? "task-completed" : isActive ? "task-active" : isMissed ? "task-expired" : "";
                 container.innerHTML += `<div class="task-card glass-card ${cls} p-4 rounded-xl flex justify-between items-center text-xs"><div><h4 class="font-bold">${rule.text}</h4><p class="text-[9px] text-gray-500">${rule.startTime} - ${rule.endTime}</p></div><div class="font-black text-[9px]">${isDone ? 'DONE' : isActive ? 'ACTIVE' : isMissed ? 'MISSED' : 'PENDING'}</div></div>`;
             });
         }
 
-        // AI COACH - Using App's Groq Model (Fixing Offline Issue)
-        const chatInput = document.getElementById('chat-input');
+        // PERSISTENT CHAT HISTORY
         const chatMessages = document.getElementById('chat-messages');
-        document.getElementById('chat-toggle').onclick = () => document.getElementById('chat-window').classList.toggle('active');
+        const chatInput = document.getElementById('chat-input');
+        
+        function listenToChatHistory(uid) {
+            const q = query(collection(db, "users", uid, "chats"), orderBy("timestamp", "asc"));
+            onSnapshot(q, (snapshot) => {
+                chatMessages.innerHTML = '';
+                if(snapshot.empty) {
+                    appendMsg("Kaise ho Warrior? Aaj ka progress kaisa hai? ⚡", false);
+                }
+                snapshot.forEach(d => {
+                    const data = d.data();
+                    appendMsg(data.text, data.isUser);
+                });
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
+        }
 
-        document.getElementById('send-btn').onclick = async () => {
+        async function askCoach() {
             const msg = chatInput.value.trim();
-            if (!msg || !userProfileData) return;
-            
-            appendMsg(msg, true);
+            if (!msg || !userProfile) return;
+            const uid = auth.currentUser.uid;
+            const chatRef = collection(db, "users", uid, "chats");
+
             chatInput.value = '';
-            const loaderId = 'L' + Date.now();
-            appendMsg("Coach is writing...", false, loaderId);
+            await addDoc(chatRef, { text: msg, isUser: true, timestamp: Date.now() });
 
             try {
-                // Using exact model from your app: "openai/gpt-oss-120b"
+                // Using exact model from App: openai/gpt-oss-120b
                 const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
-                    headers: { 
-                        'Authorization': 'Bearer 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',
-                        'Content-Type': 'application/json' 
-                    },
+                    headers: { 'Authorization': 'Bearer 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', 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: "openai/gpt-oss-120b",
-                        messages: [{ role: "user", content: `System: Talk in Hinglish as aggressive ARC COACH. User: ${userProfileData.name}, Points: ${userProfileData.points}, Streak: ${userProfileData.streak}. Question: ${msg}` }]
+                        messages: [{ role: "user", content: `System: Hinglish fitness coach. User: ${userProfile.name}, Points: ${userProfile.points}. Question: ${msg}` }]
                     })
                 });
                 const data = await res.json();
-                document.getElementById(loaderId).innerText = data.choices[0].message.content;
+                const reply = data.choices[0].message.content;
+                await addDoc(chatRef, { text: reply, isUser: false, timestamp: Date.now() });
             } catch (e) {
-                // If specific model fails, fallback to standard llama
-                try {
-                    const fallback = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                        method: 'POST',
-                        headers: { 'Authorization': 'Bearer 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', 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ model: "llama3-70b-8192", messages: [{ role: "user", content: `Talk in Hinglish. User ${userProfileData.name}: ${msg}` }] })
-                    });
-                    const d = await fallback.json();
-                    document.getElementById(loaderId).innerText = d.choices[0].message.content;
-                } catch(e2) {
-                    document.getElementById(loaderId).innerText = "Coach Offline hai Warrior, Net ya Key check karo!";
-                }
+                // Fallback to Llama if first model is busy
+                const fb = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer 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', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: "llama3-70b-8192", messages: [{ role: "user", content: msg }] })
+                });
+                const d = await fb.json();
+                await addDoc(chatRef, { text: d.choices[0].message.content, isUser: false, timestamp: Date.now() });
             }
-        };
+        }
 
-        function appendMsg(t, u, id) {
+        function appendMsg(t, u) {
             const d = document.createElement('div');
-            d.className = u ? "bg-blue-600 p-2.5 rounded-xl self-end max-w-[85%]" : "bg-white/10 p-2.5 rounded-xl self-start max-w-[85%]";
-            if(id) d.id = id;
+            d.className = u ? "bg-blue-600 p-3 rounded-2xl rounded-tr-none self-end max-w-[85%] shadow-md" : "bg-white/10 p-3 rounded-2xl rounded-tl-none self-start max-w-[85%] border border-white/5";
             d.innerText = t;
             chatMessages.appendChild(d);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        // Leaderboard & Name Edit
+        document.getElementById('send-btn').onclick = askCoach;
+        chatInput.onkeydown = (e) => { if(e.key==='Enter') askCoach(); };
+        document.getElementById('chat-toggle').onclick = () => document.getElementById('chat-window').classList.toggle('active');
+        document.getElementById('edit-name-btn').onclick = async () => {
+            const n = prompt("Enter Name:", userProfile.name);
+            if(n) await updateDoc(doc(db, "users", auth.currentUser.uid), { name: n.trim() });
+        };
+        document.getElementById('login-btn').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
+        document.getElementById('logout-btn').onclick = () => signOut(auth);
+
         function setupLeaderboard() {
             onSnapshot(query(collection(db, "users"), orderBy("points", "desc"), limit(10)), (snap) => {
                 const b = document.getElementById('leaderboard-body'); b.innerHTML = '';
                 let r = 1; snap.forEach(d => {
-                    b.innerHTML += `<tr class="border-b border-white/5"><td class="py-2.5 text-blue-400 font-bold">#${r}</td><td>${d.data().name}</td><td class="text-right font-black">${d.data().points}</td></tr>`;
+                    b.innerHTML += `<tr class="border-b border-white/5"><td class="py-3 font-bold text-blue-400">#${r}</td><td class="font-medium">${d.data().name}</td><td class="text-right font-black text-gray-400">${d.data().points}</td></tr>`;
                     r++;
                 });
             });
         }
-
-        document.getElementById('edit-name-btn').onclick = async () => {
-            const n = prompt("Enter Warrior Name:", userProfileData.name);
-            if(n && n.trim() !== "") await updateDoc(doc(db, "users", auth.currentUser.uid), { name: n.trim() });
-        };
-
-        document.getElementById('login-btn').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
-        document.getElementById('logout-btn').onclick = () => signOut(auth);
-        chatInput.onkeydown = (e) => { if(e.key==='Enter') document.getElementById('send-btn').click(); };
     </script>
 </body>
 </html>
