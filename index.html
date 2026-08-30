@@ -2,210 +2,1532 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
     <title>Winter Arc Dashboard</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
-        body { background: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; font-size: 11px; overflow-x: hidden; }
-        .glass { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
-        .task-card { border-left: 3px solid transparent; transition: 0.2s; margin-bottom: 6px; padding: 10px; }
-        .done { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.05); }
-        .active-task { border-left-color: #22c55e; background: rgba(34, 197, 94, 0.05); }
-        #chat-window { position: fixed; bottom: 80px; right: 20px; width: 280px; height: 380px; z-index: 100; transition: 0.3s; transform: translateY(20px); opacity: 0; pointer-events: none; }
-        #chat-window.active { transform: translateY(0); opacity: 1; pointer-events: all; }
-        .chat-bubble { padding: 8px 12px; border-radius: 12px; max-width: 85%; margin-bottom: 8px; font-size: 10px; line-height: 1.4; }
-        ::-webkit-scrollbar { width: 3px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+        body {
+            background: #020617;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            overflow-x: hidden;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .task-card {
+            border-left: 3px solid transparent;
+            transition: 0.2s;
+            margin-bottom: 6px;
+            padding: 10px;
+        }
+
+        .done {
+            border-left-color: #3b82f6;
+            background: rgba(59,130,246,0.05);
+        }
+
+        .active-task {
+            border-left-color: #22c55e;
+            background: rgba(34,197,94,0.05);
+        }
+
+        #chat-window {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 280px;
+            height: 380px;
+            z-index: 100;
+            transition: 0.3s;
+            transform: translateY(20px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #chat-window.active {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .chat-bubble {
+            padding: 8px 12px;
+            border-radius: 12px;
+            max-width: 85%;
+            margin-bottom: 8px;
+            font-size: 10px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        ::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+        }
     </style>
 </head>
+
 <body class="p-4 flex flex-col items-center">
 
-    <div class="w-full max-w-sm space-y-4 pb-20">
-        <div class="flex justify-between items-center">
-            <h1 class="text-base font-black italic text-blue-500 uppercase tracking-tighter">Winter Arc</h1>
-            <button id="logout-btn" class="text-[8px] text-red-500 opacity-40 uppercase font-bold">Logout</button>
-        </div>
+<div class="w-full max-w-sm space-y-4 pb-20">
 
-        <!-- COUNTDOWN TIMER -->
-        <div class="bg-emerald-600/10 border border-emerald-500/30 p-4 rounded-2xl text-center">
-            <p class="text-gray-400 text-[9px] font-bold tracking-widest uppercase mb-1">Challenge Starts In</p>
-            <h3 id="countdown-timer" class="text-lg font-mono font-black text-emerald-500 italic tracking-tighter">00d : 00h : 00m : 00s</h3>
-        </div>
+    <!-- HEADER -->
 
-        <!-- PROFILE CARD (FULL NAME FIX) -->
-        <div class="glass p-4 rounded-2xl border-l-4 border-blue-500 flex justify-between items-center shadow-xl">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center text-xl font-black text-blue-400" id="user-initial">W</div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span id="user-name" class="font-bold text-sm text-white whitespace-nowrap">Warrior</span>
-                        <button id="edit-name-btn" class="text-[7px] text-blue-400 border border-blue-400/20 px-1 rounded hover:bg-blue-400/10">Edit</button>
-                    </div>
-                    <div class="text-[9px] text-yellow-500 font-black tracking-widest"><span id="user-points">0</span> PTS</div>
+    <div class="flex justify-between items-center">
+
+        <h1 class="text-base font-black italic text-blue-500 uppercase tracking-tighter">
+            Winter Arc
+        </h1>
+
+        <button
+            id="logout-btn"
+            class="text-[8px] text-red-500 opacity-40 uppercase font-bold">
+            Logout
+        </button>
+
+    </div>
+
+
+    <!-- COUNTDOWN -->
+
+    <div class="bg-emerald-600/10 border border-emerald-500/30 p-4 rounded-2xl text-center">
+
+        <p class="text-gray-400 text-[9px] font-bold tracking-widest uppercase mb-1">
+            Challenge Starts In
+        </p>
+
+        <h3
+            id="countdown-timer"
+            class="text-lg font-mono font-black text-emerald-500 italic tracking-tighter">
+            00d : 00h : 00m : 00s
+        </h3>
+
+    </div>
+
+
+    <!-- PROFILE -->
+
+    <div class="glass p-4 rounded-2xl border-l-4 border-blue-500 flex justify-between items-center shadow-xl">
+
+        <div class="flex items-center gap-3">
+
+            <div
+                id="user-initial"
+                class="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center text-xl font-black text-blue-400">
+                W
+            </div>
+
+            <div>
+
+                <div class="flex items-center gap-2">
+
+                    <span
+                        id="user-name"
+                        class="font-bold text-sm text-white whitespace-nowrap">
+                        Warrior
+                    </span>
+
+                    <button
+                        id="edit-name-btn"
+                        class="text-[7px] text-blue-400 border border-blue-400/20 px-1 rounded">
+                        Edit
+                    </button>
+
                 </div>
+
+                <div class="text-[9px] text-yellow-500 font-black tracking-widest">
+
+                    <span id="user-points">0</span> PTS
+
+                </div>
+
             </div>
-            <div class="text-right">
-                <div class="text-[7px] text-gray-500 font-black uppercase">Streak 🔥</div>
-                <div id="user-streak" class="text-base font-black text-orange-500">0 Days</div>
-            </div>
+
         </div>
 
-        <!-- LEADERBOARD -->
-        <div class="glass p-3 rounded-2xl">
-            <h3 class="text-[9px] font-black text-yellow-500 uppercase mb-2 tracking-widest flex items-center gap-1">🏆 Top Warriors</h3>
-            <table class="w-full text-left text-[9px]"><tbody id="leaderboard-body"></tbody></table>
+        <div class="text-right">
+
+            <div class="text-[7px] text-gray-500 font-black uppercase">
+                Streak 🔥
+            </div>
+
+            <div
+                id="user-streak"
+                class="text-base font-black text-orange-500">
+                0 Days
+            </div>
+
         </div>
 
-        <!-- CHECKLIST -->
-        <h3 class="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-4">📋 Daily Schedule</h3>
-        <div id="tasks-container" class="space-y-1"></div>
     </div>
 
-    <!-- AI COACH WINDOW -->
-    <div id="chat-window" class="glass rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-blue-500/20">
-        <div class="bg-blue-600/10 p-3 border-b border-white/5 flex justify-between items-center">
-            <span class="font-black italic text-blue-400 text-[10px]">ARC COACH AI</span>
-            <span class="text-[8px] text-emerald-500 font-bold animate-pulse">DUAL-API ACTIVE</span>
-        </div>
-        <div id="chat-messages" class="flex-1 overflow-y-auto p-3 flex flex-col">
-            <div class="chat-bubble self-start bg-white/5 text-gray-300">Warrior, focus karo. Kya help chahiye? ⚡</div>
-        </div>
-        <div class="p-2 bg-slate-900/50 flex gap-2 border-t border-white/5">
-            <input type="text" id="chat-input" placeholder="Type message..." class="flex-1 bg-transparent rounded-lg px-3 py-1.5 text-[10px] focus:outline-none border border-white/5 text-white">
-            <button id="send-btn" class="bg-blue-600 px-3 rounded-lg text-xs hover:bg-blue-700 transition">➤</button>
-        </div>
+
+    <!-- LEADERBOARD -->
+
+    <div class="glass p-3 rounded-2xl">
+
+        <h3 class="text-[9px] font-black text-yellow-500 uppercase mb-2 tracking-widest">
+            🏆 Top Warriors
+        </h3>
+
+        <table class="w-full text-left text-[9px]">
+
+            <tbody id="leaderboard-body"></tbody>
+
+        </table>
+
     </div>
 
-    <button id="chat-toggle" class="fixed bottom-6 right-6 bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl z-50 text-xl hover:scale-105 active:scale-95 transition">🤖</button>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, collection, query, orderBy, limit, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <!-- TASKS -->
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCZqTzcU4kK5nkEkB1UcBQlMA-lOv0EPl0",
-            authDomain: "winter-arc-ba20e.firebaseapp.com",
-            projectId: "winter-arc-ba20e",
-            storageBucket: "winter-arc-ba20e.appspot.com",
-            messagingSenderId: "564956254415",
-            appId: "1:564956254415:web:YOUR_ACTUAL_APP_ID"
-        };
+    <h3 class="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-4">
+        📋 Daily Schedule
+    </h3>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    <div
+        id="tasks-container"
+        class="space-y-1">
+    </div>
 
-        let userProfile = null;
-        let rules = [];
+</div>
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                await syncUser(user);
-                onSnapshot(doc(db, "config", "active_challenge"), (s) => { rules = s.data().rules || []; updateChecklist(); });
-                onSnapshot(doc(db, "users", user.uid), (s) => { 
-                    userProfile = s.data(); 
-                    document.getElementById('user-points').innerText = userProfile.points;
-                    document.getElementById('user-streak').innerText = userProfile.streak;
-                    document.getElementById('user-name').innerText = userProfile.name;
-                    document.getElementById('user-initial').innerText = userProfile.name.charAt(0).toUpperCase();
-                    updateChecklist(); 
-                });
-                syncRanks();
-            } else { signInWithPopup(auth, new GoogleAuthProvider()); }
-        });
 
-        async function syncUser(user) {
-            const ref = doc(db, "users", user.uid);
-            const s = await getDoc(ref);
-            if (!s.exists()) await setDoc(ref, { uid: user.uid, name: user.displayName || "Warrior", points: 0, streak: 0, dailyTaskCounts: {} });
+<!-- AI CHAT -->
+
+<div
+    id="chat-window"
+    class="glass rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-blue-500/20">
+
+    <div class="bg-blue-600/10 p-3 border-b border-white/5 flex justify-between items-center">
+
+        <span class="font-black italic text-blue-400 text-[10px]">
+            ARC COACH AI
+        </span>
+
+        <span
+            id="ai-status"
+            class="text-[8px] text-emerald-500 font-bold">
+            DUAL-API ACTIVE
+        </span>
+
+    </div>
+
+
+    <div
+        id="chat-messages"
+        class="flex-1 overflow-y-auto p-3 flex flex-col">
+
+        <div class="chat-bubble self-start bg-white/5 text-gray-300">
+            Warrior, focus karo. Kya help chahiye? ⚡
+        </div>
+
+    </div>
+
+
+    <div class="p-2 bg-slate-900/50 flex gap-2 border-t border-white/5">
+
+        <input
+            type="text"
+            id="chat-input"
+            placeholder="Type message..."
+            class="flex-1 bg-transparent rounded-lg px-3 py-1.5 text-[10px] focus:outline-none border border-white/5 text-white">
+
+        <button
+            id="send-btn"
+            class="bg-blue-600 px-3 rounded-lg text-xs hover:bg-blue-700 transition">
+            ➤
+        </button>
+
+    </div>
+
+</div>
+
+
+<button
+    id="chat-toggle"
+    class="fixed bottom-6 right-6 bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl z-50 text-xl">
+    🤖
+</button>
+
+
+<script type="module">
+
+import {
+    initializeApp
+}
+from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+
+import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup,
+    onAuthStateChanged,
+    signOut
+}
+from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+
+import {
+    getFirestore,
+    doc,
+    onSnapshot,
+    collection,
+    query,
+    orderBy,
+    limit,
+    getDoc,
+    setDoc,
+    updateDoc
+}
+from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+
+/* ================================
+   FIREBASE
+================================ */
+
+const firebaseConfig = {
+
+    apiKey:
+        "AIzaSyCZqTzcU4kK5nkEkB1UcBQlMA-lOv0EPl0",
+
+    authDomain:
+        "winter-arc-ba20e.firebaseapp.com",
+
+    projectId:
+        "winter-arc-ba20e",
+
+    storageBucket:
+        "winter-arc-ba20e.appspot.com",
+
+    messagingSenderId:
+        "564956254415",
+
+    appId:
+        "1:564956254415:web:YOUR_ACTUAL_APP_ID"
+};
+
+
+/* ================================
+   AI KEYS
+================================ */
+
+/*
+    YAHAN tumne jo Gemini key bheji hai
+    wahi paste karo.
+*/
+
+const GEMINI_API_KEY =
+    "AQ.Ab8RN6LMLMaAfXEbUpmGtIlD4qWuiFm7lVbG96TUguyVcRW1Dw";
+
+
+/*
+    YAHAN tumne jo Groq key bheji hai
+    wahi paste karo.
+*/
+
+const GROQ_API_KEY =
+    "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";
+
+
+const GEMINI_MODEL =
+    "gemini-2.5-flash";
+
+
+const GROQ_MODEL =
+    "llama-3.1-8b-instant";
+
+
+/* ================================
+   START FIREBASE
+================================ */
+
+const app =
+    initializeApp(firebaseConfig);
+
+const auth =
+    getAuth(app);
+
+const db =
+    getFirestore(app);
+
+
+let userProfile = null;
+
+let rules = [];
+
+
+/* ================================
+   AUTH
+================================ */
+
+onAuthStateChanged(
+    auth,
+
+    async (user) => {
+
+        if (user) {
+
+            await syncUser(user);
+
+            watchChallenge();
+
+            watchUser(user.uid);
+
+            syncRanks();
+
         }
 
-        function updateChecklist() {
-            const container = document.getElementById('tasks-container');
-            if(!rules.length) return;
-            container.innerHTML = '';
-            const today = new Date().getDate().toString();
-            const now = new Date().getHours() * 60 + new Date().getMinutes();
-            const count = (userProfile?.dailyTaskCounts || {})[today] || 0;
-            rules.forEach((r, i) => {
-                const [sH, sM] = (r.startTime || "00:00").split(':').map(Number);
-                const [eH, eM] = (r.endTime || "00:00").split(':').map(Number);
-                const done = i < count;
-                const active = now >= (sH*60+sM) && now <= (eH*60+eM);
-                let cls = done ? "done" : active ? "active-task" : "";
-                container.innerHTML += `<div class="task-card glass rounded-xl flex justify-between items-center ${cls}"><div><div class="font-bold text-gray-100 uppercase text-[10px]">${r.text}</div><div class="text-[8px] text-gray-500 font-mono">${r.startTime} - ${r.endTime}</div></div><div class="text-[9px] font-black opacity-40 uppercase tracking-tighter">${done ? '✓ DONE' : active ? '● LIVE' : 'WAIT'}</div></div>`;
-            });
-        }
+        else {
 
-        async function askCoach() {
-            const i = document.getElementById('chat-input');
-            const msg = i.value.trim();
-            if(!msg || !userProfile) return;
-            appendMsg(msg, true);
-            i.value = '';
-            const lid = 'L-' + Date.now();
-            appendMsg("Coach typing...", false, lid);
-
-            // DUAL API LOGIC: Try Gemini first, then Groq
             try {
-                // 1. Try Gemini
-                const geminiRes = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AQ.Ab8RN6LMLMaAfXEbUpmGtIlD4qWuiFm7lVbG96TUguyVcRW1Dw', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: `You are ARC COACH. Talk in Hinglish as aggressive coach. User ${userProfile.name}. Question: ${msg}` }] }] })
-                });
-                const gData = await geminiRes.json();
-                document.getElementById(lid).innerText = gData.candidates[0].content.parts[0].text;
-            } catch (err) {
-                // 2. Fallback to Groq if Gemini fails
-                try {
-                    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                        method: 'POST',
-                        headers: { 'Authorization': 'Bearer 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', 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ model: "llama-3.1-8b-instant", messages: [{ role: "user", content: `Hinglish Coach reply to ${userProfile.name}: ${msg}` }] })
-                    });
-                    const groqData = await groqRes.json();
-                    document.getElementById(lid).innerText = groqData.choices[0].message.content;
-                } catch (e2) {
-                    document.getElementById(lid).innerText = "Both AI Offline! Net check karo Warrior.";
-                }
+
+                const provider =
+                    new GoogleAuthProvider();
+
+                await signInWithPopup(
+                    auth,
+                    provider
+                );
+
             }
+
+            catch (error) {
+
+                console.error(
+                    "Login error:",
+                    error
+                );
+
+            }
+
         }
 
-        function appendMsg(t, u, id) {
-            const d = document.createElement('div');
-            d.className = `chat-bubble ${u ? 'self-end bg-blue-600 text-white' : 'self-start bg-white/10 border border-white/5 text-gray-300'}`;
-            if(id) d.id = id;
-            d.innerText = t;
-            const c = document.getElementById('chat-messages'); c.appendChild(d); c.scrollTop = c.scrollHeight;
+    }
+);
+
+
+/* ================================
+   USER CREATE
+================================ */
+
+async function syncUser(user) {
+
+    const ref =
+        doc(
+            db,
+            "users",
+            user.uid
+        );
+
+    const snap =
+        await getDoc(ref);
+
+
+    if (!snap.exists()) {
+
+        await setDoc(
+            ref,
+            {
+
+                uid:
+                    user.uid,
+
+                name:
+                    user.displayName ||
+                    "Warrior",
+
+                points:
+                    0,
+
+                streak:
+                    0,
+
+                dailyTaskCounts:
+                    {}
+
+            }
+        );
+
+    }
+
+}
+
+
+/* ================================
+   CHALLENGE LISTENER
+================================ */
+
+function watchChallenge() {
+
+    onSnapshot(
+
+        doc(
+            db,
+            "config",
+            "active_challenge"
+        ),
+
+        (snap) => {
+
+            if (!snap.exists()) {
+
+                rules = [];
+
+                updateChecklist();
+
+                return;
+
+            }
+
+            const data =
+                snap.data();
+
+            rules =
+                Array.isArray(data?.rules)
+                    ? data.rules
+                    : [];
+
+            updateChecklist();
+
+        },
+
+        (error) => {
+
+            console.error(
+                "Challenge error:",
+                error
+            );
+
         }
 
-        function syncRanks() {
-            onSnapshot(query(collection(db, "users"), orderBy("points", "desc"), limit(5)), (snap) => {
-                const b = document.getElementById('leaderboard-body'); b.innerHTML = '';
-                let r = 1; snap.forEach(d => {
-                    b.innerHTML += `<tr class="border-b border-white/5"><td class="py-2 text-blue-500 font-bold">#${r}</td><td class="font-bold text-gray-300">${d.data().name}</td><td class="text-right font-black opacity-40">${d.data().points} P</td></tr>`;
-                    r++;
-                });
-            });
+    );
+
+}
+
+
+/* ================================
+   USER LISTENER
+================================ */
+
+function watchUser(uid) {
+
+    onSnapshot(
+
+        doc(
+            db,
+            "users",
+            uid
+        ),
+
+        (snap) => {
+
+            if (!snap.exists())
+                return;
+
+
+            const data =
+                snap.data();
+
+
+            userProfile = {
+
+                name:
+                    data?.name ||
+                    "Warrior",
+
+                points:
+                    Number(
+                        data?.points || 0
+                    ),
+
+                streak:
+                    Number(
+                        data?.streak || 0
+                    ),
+
+                dailyTaskCounts:
+                    data?.dailyTaskCounts || {}
+
+            };
+
+
+            document
+                .getElementById(
+                    "user-name"
+                )
+                .innerText =
+                userProfile.name;
+
+
+            document
+                .getElementById(
+                    "user-points"
+                )
+                .innerText =
+                userProfile.points;
+
+
+            document
+                .getElementById(
+                    "user-streak"
+                )
+                .innerText =
+                `${userProfile.streak} Days`;
+
+
+            document
+                .getElementById(
+                    "user-initial"
+                )
+                .innerText =
+                userProfile.name
+                    .charAt(0)
+                    .toUpperCase();
+
+
+            updateChecklist();
+
         }
 
-        function updateTimer() {
-            const target = new Date(2026, 8, 1);
-            const diff = target - new Date();
-            if (diff > 0) {
-                const d = Math.floor(diff/86400000); const h = Math.floor((diff/3600000)%24); const m = Math.floor((diff/60000)%60); const s = Math.floor((diff/1000)%60);
-                document.getElementById('countdown-timer').innerText = `${d}d : ${h}h : ${m}m : ${s}s`;
-            } else document.getElementById('countdown-timer').innerText = "WINTER ARC IS LIVE!";
+    );
+
+}
+
+
+/* ================================
+   CHECKLIST
+================================ */
+
+function updateChecklist() {
+
+    const container =
+        document.getElementById(
+            "tasks-container"
+        );
+
+
+    container.innerHTML = "";
+
+
+    if (
+        !Array.isArray(rules)
+        ||
+        rules.length === 0
+    ) {
+
+        return;
+
+    }
+
+
+    const currentDate =
+        new Date();
+
+
+    const today =
+        currentDate
+            .getDate()
+            .toString();
+
+
+    const now =
+        currentDate.getHours() * 60
+        +
+        currentDate.getMinutes();
+
+
+    const count =
+        Number(
+            userProfile
+                ?.dailyTaskCounts
+                ?.[today]
+            ||
+            0
+        );
+
+
+    rules.forEach(
+        (rule, index) => {
+
+            const start =
+                rule?.startTime ||
+                "00:00";
+
+
+            const end =
+                rule?.endTime ||
+                "00:00";
+
+
+            const [
+                startHour,
+                startMinute
+            ] =
+                start
+                    .split(":")
+                    .map(Number);
+
+
+            const [
+                endHour,
+                endMinute
+            ] =
+                end
+                    .split(":")
+                    .map(Number);
+
+
+            const startMinutes =
+                startHour * 60
+                +
+                startMinute;
+
+
+            const endMinutes =
+                endHour * 60
+                +
+                endMinute;
+
+
+            const done =
+                index < count;
+
+
+            const active =
+                !done
+                &&
+                now >= startMinutes
+                &&
+                now <= endMinutes;
+
+
+            const status =
+                done
+                    ? "✓ DONE"
+                    : active
+                        ? "● LIVE"
+                        : "WAIT";
+
+
+            const statusClass =
+                done
+                    ? "done"
+                    : active
+                        ? "active-task"
+                        : "";
+
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+
+            card.className =
+                `task-card glass rounded-xl flex justify-between items-center ${statusClass}`;
+
+
+            const info =
+                document.createElement(
+                    "div"
+                );
+
+
+            const title =
+                document.createElement(
+                    "div"
+                );
+
+
+            title.className =
+                "font-bold text-gray-100 uppercase text-[10px]";
+
+
+            title.innerText =
+                rule?.text ||
+                "Task";
+
+
+            const time =
+                document.createElement(
+                    "div"
+                );
+
+
+            time.className =
+                "text-[8px] text-gray-500 font-mono";
+
+
+            time.innerText =
+                `${start} - ${end}`;
+
+
+            const state =
+                document.createElement(
+                    "div"
+                );
+
+
+            state.className =
+                "text-[9px] font-black opacity-40 uppercase";
+
+
+            state.innerText =
+                status;
+
+
+            info.appendChild(title);
+
+            info.appendChild(time);
+
+            card.appendChild(info);
+
+            card.appendChild(state);
+
+            container.appendChild(card);
+
+        }
+    );
+
+}
+
+
+/* ================================
+   CHAT MESSAGE
+================================ */
+
+function appendMsg(
+    text,
+    user,
+    id = null
+) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.className =
+        user
+            ?
+            "chat-bubble self-end bg-blue-600 text-white"
+            :
+            "chat-bubble self-start bg-white/10 text-gray-300";
+
+
+    if (id)
+        div.id = id;
+
+
+    div.innerText =
+        text;
+
+
+    const chat =
+        document.getElementById(
+            "chat-messages"
+        );
+
+
+    chat.appendChild(div);
+
+
+    chat.scrollTop =
+        chat.scrollHeight;
+
+}
+
+
+/* ================================
+   AI
+================================ */
+
+async function askCoach() {
+
+    const input =
+        document.getElementById(
+            "chat-input"
+        );
+
+
+    const status =
+        document.getElementById(
+            "ai-status"
+        );
+
+
+    const msg =
+        input.value.trim();
+
+
+    if (
+        !msg
+        ||
+        !userProfile
+    ) {
+
+        return;
+
+    }
+
+
+    appendMsg(
+        msg,
+        true
+    );
+
+
+    input.value = "";
+
+
+    const loadingId =
+        "ai-" +
+        Date.now();
+
+
+    appendMsg(
+        "Coach typing...",
+        false,
+        loadingId
+    );
+
+
+    const output =
+        document.getElementById(
+            loadingId
+        );
+
+
+    status.innerText =
+        "GEMINI...";
+
+
+    const prompt =
+`
+You are ARC COACH AI.
+
+Talk naturally in Hinglish.
+
+User name:
+${userProfile.name}
+
+Points:
+${userProfile.points}
+
+Streak:
+${userProfile.streak}
+
+User question:
+${msg}
+
+Give a useful and concise reply.
+`.trim();
+
+
+    /* =====================
+       GEMINI
+    ===================== */
+
+    try {
+
+        const response =
+            await fetch(
+
+                `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`,
+
+                {
+
+                    method:
+                        "POST",
+
+                    headers:
+                        {
+
+                            "Content-Type":
+                                "application/json"
+
+                        },
+
+                    body:
+                        JSON.stringify(
+                            {
+
+                                contents:
+                                    [
+
+                                        {
+
+                                            parts:
+                                                [
+
+                                                    {
+
+                                                        text:
+                                                            prompt
+
+                                                    }
+
+                                                ]
+
+                                        }
+
+                                    ]
+
+                            }
+                        )
+
+                }
+
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+
+                data?.error?.message
+                ||
+                `Gemini HTTP ${response.status}`
+
+            );
+
         }
 
-        document.getElementById('chat-toggle').onclick = () => document.getElementById('chat-window').classList.toggle('active');
-        document.getElementById('send-btn').onclick = askCoach;
-        document.getElementById('edit-name-btn').onclick = async () => { const n = prompt("Name:", userProfile.name); if(n) await updateDoc(doc(db, "users", auth.currentUser.uid), { name: n.trim() }); };
-        document.getElementById('logout-btn').onclick = () => signOut(auth);
-        document.getElementById('chat-input').onkeydown = (e) => { if(e.key==='Enter') askCoach(); };
-        setInterval(updateTimer, 1000); updateTimer();
-    </script>
+
+        const answer =
+            data
+                ?.candidates
+                ?.[0]
+                ?.content
+                ?.parts
+                ?.map(
+                    part =>
+                        part?.text || ""
+                )
+                .join("")
+                .trim();
+
+
+        if (!answer) {
+
+            throw new Error(
+                "Gemini empty response"
+            );
+
+        }
+
+
+        output.innerText =
+            answer;
+
+
+        status.innerText =
+            "GEMINI ACTIVE";
+
+
+        return;
+
+    }
+
+    catch (geminiError) {
+
+        console.error(
+            "Gemini failed:",
+            geminiError
+        );
+
+    }
+
+
+    /* =====================
+       GROQ FALLBACK
+    ===================== */
+
+
+    status.innerText =
+        "GROQ...";
+
+
+    try {
+
+        const response =
+            await fetch(
+
+                "https://api.groq.com/openai/v1/chat/completions",
+
+                {
+
+                    method:
+                        "POST",
+
+                    headers:
+                        {
+
+                            "Content-Type":
+                                "application/json",
+
+                            "Authorization":
+                                `Bearer ${GROQ_API_KEY}`
+
+                        },
+
+                    body:
+                        JSON.stringify(
+                            {
+
+                                model:
+                                    GROQ_MODEL,
+
+                                messages:
+                                    [
+
+                                        {
+
+                                            role:
+                                                "system",
+
+                                            content:
+                                                "You are ARC COACH AI. Reply naturally in Hinglish."
+
+                                        },
+
+                                        {
+
+                                            role:
+                                                "user",
+
+                                            content:
+                                                prompt
+
+                                        }
+
+                                    ]
+
+                            }
+                        )
+
+                }
+
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+
+                data?.error?.message
+                ||
+                `Groq HTTP ${response.status}`
+
+            );
+
+        }
+
+
+        const answer =
+            data
+                ?.choices
+                ?.[0]
+                ?.message
+                ?.content
+                ?.trim();
+
+
+        if (!answer) {
+
+            throw new Error(
+                "Groq empty response"
+            );
+
+        }
+
+
+        output.innerText =
+            answer;
+
+
+        status.innerText =
+            "GROQ ACTIVE";
+
+    }
+
+    catch (groqError) {
+
+        console.error(
+            "Groq failed:",
+            groqError
+        );
+
+
+        status.innerText =
+            "AI OFFLINE";
+
+
+        output.innerText =
+            "AI API error. Safari console kholo aur red error check karo.";
+
+    }
+
+}
+
+
+/* ================================
+   LEADERBOARD
+================================ */
+
+function syncRanks() {
+
+    const q =
+        query(
+
+            collection(
+                db,
+                "users"
+            ),
+
+            orderBy(
+                "points",
+                "desc"
+            ),
+
+            limit(5)
+
+        );
+
+
+    onSnapshot(
+        q,
+
+        (snapshot) => {
+
+            const body =
+                document.getElementById(
+                    "leaderboard-body"
+                );
+
+
+            body.innerHTML = "";
+
+
+            let rank = 1;
+
+
+            snapshot.forEach(
+                (snap) => {
+
+                    const data =
+                        snap.data();
+
+
+                    const row =
+                        document.createElement(
+                            "tr"
+                        );
+
+
+                    row.className =
+                        "border-b border-white/5";
+
+
+                    const number =
+                        document.createElement(
+                            "td"
+                        );
+
+
+                    number.className =
+                        "py-2 text-blue-500 font-bold";
+
+
+                    number.innerText =
+                        `#${rank}`;
+
+
+                    const name =
+                        document.createElement(
+                            "td"
+                        );
+
+
+                    name.className =
+                        "font-bold text-gray-300";
+
+
+                    name.innerText =
+                        data?.name ||
+                        "Warrior";
+
+
+                    const points =
+                        document.createElement(
+                            "td"
+                        );
+
+
+                    points.className =
+                        "text-right font-black opacity-40";
+
+
+                    points.innerText =
+                        `${data?.points || 0} P`;
+
+
+                    row.appendChild(
+                        number
+                    );
+
+
+                    row.appendChild(
+                        name
+                    );
+
+
+                    row.appendChild(
+                        points
+                    );
+
+
+                    body.appendChild(
+                        row
+                    );
+
+
+                    rank++;
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================
+   TIMER
+================================ */
+
+function updateTimer() {
+
+    const target =
+        new Date(
+            2026,
+            8,
+            1,
+            0,
+            0,
+            0
+        );
+
+
+    const diff =
+        target
+        -
+        new Date();
+
+
+    const timer =
+        document.getElementById(
+            "countdown-timer"
+        );
+
+
+    if (diff <= 0) {
+
+        timer.innerText =
+            "WINTER ARC IS LIVE!";
+
+        return;
+
+    }
+
+
+    const days =
+        Math.floor(
+            diff / 86400000
+        );
+
+
+    const hours =
+        Math.floor(
+            diff / 3600000
+        )
+        %
+        24;
+
+
+    const minutes =
+        Math.floor(
+            diff / 60000
+        )
+        %
+        60;
+
+
+    const seconds =
+        Math.floor(
+            diff / 1000
+        )
+        %
+        60;
+
+
+    timer.innerText =
+        `${days}d : ${hours}h : ${minutes}m : ${seconds}s`;
+
+}
+
+
+/* ================================
+   BUTTONS
+================================ */
+
+document
+    .getElementById(
+        "chat-toggle"
+    )
+    .onclick =
+    () => {
+
+        document
+            .getElementById(
+                "chat-window"
+            )
+            .classList
+            .toggle(
+                "active"
+            );
+
+    };
+
+
+document
+    .getElementById(
+        "send-btn"
+    )
+    .onclick =
+    askCoach;
+
+
+document
+    .getElementById(
+        "chat-input"
+    )
+    .onkeydown =
+    (event) => {
+
+        if (
+            event.key ===
+            "Enter"
+        ) {
+
+            askCoach();
+
+        }
+
+    };
+
+
+document
+    .getElementById(
+        "edit-name-btn"
+    )
+    .onclick =
+    async () => {
+
+        if (
+            !userProfile
+            ||
+            !auth.currentUser
+        ) {
+
+            return;
+
+        }
+
+
+        const name =
+            prompt(
+                "Name:",
+                userProfile.name
+            );
+
+
+        if (
+            !name
+            ||
+            !name.trim()
+        ) {
+
+            return;
+
+        }
+
+
+        await updateDoc(
+
+            doc(
+                db,
+                "users",
+                auth.currentUser.uid
+            ),
+
+            {
+
+                name:
+                    name.trim()
+
+            }
+
+        );
+
+    };
+
+
+document
+    .getElementById(
+        "logout-btn"
+    )
+    .onclick =
+    () =>
+        signOut(auth);
+
+
+setInterval(
+    updateTimer,
+    1000
+);
+
+
+updateTimer();
+
+</script>
+
 </body>
 </html>
