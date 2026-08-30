@@ -4,78 +4,131 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Winter Arc Dashboard</title>
+    
+    <!-- ADSENSE -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6551032201404007" crossorigin="anonymous"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
-        body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; }
+        body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
         .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .sidebar { transition: all 0.3s ease; width: 260px; background: #0b1120; border-right: 1px solid rgba(255,255,255,0.1); }
-        #chat-main { flex: 1; display: flex; flex-col; height: 100vh; }
+        .sidebar { width: 260px; background: #0b1120; border-right: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
+        .task-card { transition: all 0.2s; border-left: 4px solid transparent; }
+        .task-completed { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+        .task-active { border-left-color: #22c55e; background: rgba(34, 197, 94, 0.1); }
+        .task-expired { border-left-color: #ef4444; background: rgba(239, 68, 68, 0.1); opacity: 0.6; }
         .session-item:hover { background: rgba(255,255,255,0.05); }
-        .active-session { background: rgba(59, 130, 246, 0.2) !important; color: #60a5fa; }
+        .active-session { background: rgba(59, 130, 246, 0.15) !important; color: #60a5fa; border-left: 2px solid #3b82f6; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        @media (max-width: 768px) { .sidebar { display: none; } }
     </style>
 </head>
-<body class="flex overflow-hidden">
+<body class="flex h-screen w-screen">
 
-    <!-- 1. SIDEBAR (CHAT HISTORY) -->
-    <div id="sidebar" class="hidden md:flex sidebar flex-col p-4 h-screen">
-        <button id="new-chat-btn" class="w-full border border-white/20 rounded-lg p-3 text-sm font-bold flex items-center gap-2 hover:bg-white/5 transition mb-6">
-            <span>+</span> New Chat
-        </button>
-        <p class="text-[10px] text-gray-500 uppercase font-bold mb-4 tracking-widest">Recent History</p>
-        <div id="sessions-list" class="flex-1 overflow-y-auto space-y-1">
-            <!-- Sessions list injected here -->
-        </div>
-        <div class="mt-auto border-t border-white/10 pt-4 text-[10px] text-gray-500 text-center">Winter Arc v2.0</div>
+    <!-- 1. LOADING SECTION -->
+    <div id="loading-section" class="fixed inset-0 z-[100] bg-[#0f172a] flex flex-col items-center justify-center text-center">
+        <h1 class="text-5xl font-black text-blue-500 italic animate-pulse">WINTER ARC</h1>
+        <p class="text-gray-500 text-sm mt-4 tracking-widest uppercase">Initializing Warrior Sync...</p>
     </div>
 
-    <!-- 2. MAIN CONTENT -->
-    <div id="chat-main" class="relative">
-        <!-- Dashboard / Chat Switcher -->
-        <div id="dashboard-view" class="h-full overflow-y-auto p-4 md:p-8 space-y-6">
-            <!-- Header, Stats, Leaderboard, Checklist (Sab wahi jo pehle tha) -->
-            <div class="max-w-3xl mx-auto space-y-6">
+    <!-- 2. LOGIN SECTION -->
+    <div id="auth-section" class="hidden fixed inset-0 z-[90] bg-[#0f172a] flex flex-col items-center justify-center text-center">
+        <h1 class="text-6xl font-black mb-4 text-blue-500 italic">WINTER ARC</h1>
+        <p class="text-gray-400 mb-8 font-medium">Official Web Dashboard</p>
+        <button id="login-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 rounded-full font-bold shadow-2xl transition transform hover:scale-105">
+            START YOUR JOURNEY
+        </button>
+    </div>
+
+    <!-- 3. SIDEBAR (CHAT HISTORY) -->
+    <div id="sidebar" class="sidebar flex flex-col p-4">
+        <button id="new-chat-btn" class="w-full border border-white/20 rounded-xl p-3 text-sm font-bold flex items-center justify-center gap-2 hover:bg-white/5 transition mb-6">
+            <span class="text-xl">+</span> New Chat
+        </button>
+        <p class="text-[10px] text-gray-500 uppercase font-black mb-4 tracking-widest ml-2">Chat History</p>
+        <div id="sessions-list" class="flex-1 overflow-y-auto space-y-1 pr-2">
+            <!-- Sessions list injected here -->
+        </div>
+        <div class="mt-auto pt-4 border-t border-white/10 text-center">
+            <button id="logout-btn" class="text-[10px] text-red-500 font-bold opacity-60 hover:opacity-100">Logout Warrior</button>
+        </div>
+    </div>
+
+    <!-- 4. MAIN CONTENT AREA -->
+    <div class="flex-1 flex flex-col overflow-hidden relative">
+        
+        <!-- DASHBOARD VIEW -->
+        <div id="dashboard-view" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+            <div class="max-w-3xl mx-auto space-y-6 pb-20">
                 <div class="flex justify-between items-center">
-                    <h2 class="text-3xl font-black italic text-blue-400">WINTER ARC</h2>
-                    <button id="show-chat-btn" class="bg-blue-600 px-4 py-2 rounded-full text-xs font-bold shadow-lg">Open AI Coach</button>
+                    <h2 class="text-4xl font-black italic text-blue-400 tracking-tighter">WINTER ARC</h2>
+                    <button id="show-chat-btn" class="md:hidden bg-blue-600 px-4 py-2 rounded-full text-[10px] font-bold">Open AI</button>
                 </div>
 
-                <!-- Stats -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="glass-card p-4 rounded-2xl border-l-4 border-blue-500">
-                        <p class="text-[10px] text-gray-500 uppercase font-bold">Points</p>
-                        <h3 id="user-points" class="text-2xl font-black text-blue-400">0</h3>
+                <!-- Banner Ad -->
+                <div class="glass-card p-2 rounded-2xl min-h-[90px] flex items-center justify-center bg-white/5">
+                    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6551032201404007" data-ad-slot="1234567890" data-ad-format="auto" data-full-width-responsive="true"></ins>
+                    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+                </div>
+
+                <!-- User Stats Card -->
+                <div class="glass-card p-6 rounded-3xl border-l-8 border-blue-500 flex items-center justify-between shadow-2xl">
+                    <div class="flex items-center gap-5">
+                        <div class="w-16 h-16 rounded-2xl bg-blue-500/20 flex items-center justify-center text-3xl font-black text-blue-400" id="user-initial">?</div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 id="user-name" class="text-2xl font-black italic">Warrior</h3>
+                                <button id="edit-name-btn" class="text-[9px] text-blue-400 border border-blue-400/30 px-2 py-0.5 rounded">Edit</button>
+                            </div>
+                            <p class="text-yellow-500 font-black text-sm tracking-wide"><span id="user-points">0</span> POINTS</p>
+                        </div>
                     </div>
-                    <div class="glass-card p-4 rounded-2xl border-l-4 border-orange-500 text-right">
-                        <p class="text-[10px] text-gray-500 uppercase font-bold">Streak</p>
-                        <h3 id="user-streak" class="text-2xl font-black text-orange-500">0 Days</h3>
+                    <div class="text-right">
+                        <p class="text-[10px] text-gray-500 font-black uppercase">Streak 🔥</p>
+                        <p id="user-streak" class="text-3xl font-black text-orange-500">0 Days</p>
                     </div>
                 </div>
 
-                <!-- Checklist Sync -->
-                <div class="glass-card p-6 rounded-2xl">
-                    <h3 class="text-lg font-bold text-emerald-500 mb-6 flex items-center gap-2">📋 Live Checklist</h3>
-                    <div id="tasks-container" class="space-y-3"></div>
+                <!-- Leaderboard -->
+                <div class="glass-card p-6 rounded-3xl">
+                    <h3 class="text-sm font-black text-yellow-500 uppercase mb-4 tracking-widest flex items-center gap-2"><span>🏆</span> Global Leaderboard</h3>
+                    <table class="w-full text-left text-sm border-separate border-spacing-y-2">
+                        <tbody id="leaderboard-body"></tbody>
+                    </table>
+                </div>
+
+                <!-- Daily Checklist (Live Sync) -->
+                <div class="glass-card p-6 rounded-3xl">
+                    <h3 class="text-lg font-black text-emerald-500 mb-6 flex items-center gap-2 uppercase tracking-tighter">📋 Daily Checklist</h3>
+                    <div id="tasks-container" class="space-y-4"></div>
                 </div>
             </div>
+
+            <!-- Floating AI Button for Dashboard -->
+            <button id="open-chat-float" class="fixed bottom-6 right-6 bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition active:scale-95 z-40">
+                <span class="text-2xl">🤖</span>
+            </button>
         </div>
 
-        <!-- FULL SCREEN CHAT (ChatGPT Style) -->
-        <div id="chat-view" class="hidden h-full flex flex-col bg-[#0f172a]">
-            <div class="p-4 border-b border-white/10 flex justify-between items-center">
-                <button id="back-to-dash" class="text-xs text-gray-400 font-bold hover:text-white">← Dashboard</button>
-                <span id="current-chat-title" class="font-bold text-blue-400 italic">NEW CHAT</span>
-                <button id="mobile-history-toggle" class="md:hidden text-xs text-blue-400">History</button>
+        <!-- FULL SCREEN CHAT VIEW -->
+        <div id="chat-view" class="hidden absolute inset-0 z-50 flex flex-col bg-[#0f172a]">
+            <div class="p-4 border-b border-white/10 flex justify-between items-center bg-[#0b1120]">
+                <button id="back-to-dash" class="text-[10px] font-black text-blue-400 uppercase tracking-widest">← Dashboard</button>
+                <div class="text-center">
+                    <p id="current-chat-title" class="font-black text-xs text-gray-100 uppercase truncate max-w-[150px]">New Chat</p>
+                </div>
+                <div class="w-10"></div>
             </div>
             <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 max-w-4xl mx-auto w-full">
-                <!-- Messages injected here -->
+                <!-- Messages load here -->
             </div>
             <div class="p-4 md:p-8 bg-[#0f172a] border-t border-white/5">
-                <div class="max-w-3xl mx-auto flex gap-4">
-                    <input type="text" id="chat-input" placeholder="Ask AI Coach..." class="flex-1 bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-blue-500 shadow-2xl">
-                    <button id="send-btn" class="bg-blue-600 px-6 rounded-xl font-bold hover:bg-blue-700 transition transform active:scale-95">SEND</button>
+                <div class="max-w-3xl mx-auto flex gap-3">
+                    <input type="text" id="chat-input" placeholder="Type your message, Warrior..." class="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-blue-500 shadow-xl">
+                    <button id="send-btn" class="bg-blue-600 w-14 rounded-2xl flex items-center justify-center hover:bg-blue-700 transition active:scale-90">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                    </button>
                 </div>
             </div>
         </div>
@@ -92,7 +145,7 @@
             projectId: "winter-arc-ba20e",
             storageBucket: "winter-arc-ba20e.appspot.com",
             messagingSenderId: "564956254415",
-            appId: "1:564956254415:web:YOUR_ACTUAL_APP_ID"
+            appId: "1:564956254415:web:YOUR_ACTUAL_APP_ID" // <- APNI ID YAHAN DAALEIN
         };
 
         const app = initializeApp(firebaseConfig);
@@ -101,27 +154,58 @@
 
         let userProfile = null;
         let currentSessionId = null;
+        let activeRules = [];
+        let msgListener = null;
 
+        // AUTH & SYNC
         onAuthStateChanged(auth, async (user) => {
+            document.getElementById('loading-section').classList.add('hidden');
             if (user) {
                 await ensureUserExists(user);
-                setupRealtimeUpdates(user.uid);
+                document.getElementById('auth-section').classList.add('hidden');
+                
+                // 1. Sync Rules
+                onSnapshot(doc(db, "config", "active_challenge"), (s) => {
+                    if(s.exists()) { activeRules = s.data().rules || []; renderTasks(); }
+                });
+
+                // 2. Sync User Data
+                onSnapshot(doc(db, "users", user.uid), (s) => {
+                    if(s.exists()) {
+                        userProfile = s.data();
+                        document.getElementById('user-name').innerText = userProfile.name;
+                        document.getElementById('user-initial').innerText = userProfile.name.charAt(0).toUpperCase();
+                        document.getElementById('user-points').innerText = userProfile.points;
+                        document.getElementById('user-streak').innerText = userProfile.streak + " Days";
+                        renderTasks();
+                    }
+                });
+
+                // 3. Sync Chat History
                 listenToSessions(user.uid);
-                // Start a new chat session if none selected
-                if(!currentSessionId) createNewChat();
+                setupLeaderboard();
             } else {
-                window.location.reload(); // Simple redirect to login logic
+                document.getElementById('auth-section').classList.remove('hidden');
             }
         });
 
+        async function ensureUserExists(user) {
+            const userRef = doc(db, "users", user.uid);
+            const s = await getDoc(userRef);
+            if (!s.exists()) {
+                await setDoc(userRef, { uid: user.uid, name: user.displayName || "Warrior", points: 0, streak: 0, dailyTaskCounts: {} });
+            }
+        }
+
         // SESSION MANAGEMENT
         async function createNewChat() {
-            const user = auth.currentUser;
-            const newSession = await addDoc(collection(db, "users", user.uid, "sessions"), {
+            const uid = auth.currentUser.uid;
+            const newSession = await addDoc(collection(db, "users", uid, "sessions"), {
                 title: "New Chat",
                 timestamp: Date.now()
             });
             selectSession(newSession.id, "New Chat");
+            openChat();
         }
 
         function listenToSessions(uid) {
@@ -132,9 +216,9 @@
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     const item = document.createElement('div');
-                    item.className = `session-item p-3 text-xs rounded-lg cursor-pointer truncate ${doc.id === currentSessionId ? 'active-session' : ''}`;
-                    item.innerText = data.title;
-                    item.onclick = () => selectSession(doc.id, data.title);
+                    item.className = `session-item p-3 text-[11px] rounded-xl cursor-pointer truncate transition mb-1 font-medium ${doc.id === currentSessionId ? 'active-session' : 'text-gray-400'}`;
+                    item.innerText = "💬 " + data.title;
+                    item.onclick = () => { selectSession(doc.id, data.title); openChat(); };
                     list.appendChild(item);
                 });
             });
@@ -142,13 +226,14 @@
 
         function selectSession(id, title) {
             currentSessionId = id;
-            document.getElementById('current-chat-title').innerText = title.toUpperCase();
+            document.getElementById('current-chat-title').innerText = title;
             listenToMessages(id);
         }
 
         function listenToMessages(sid) {
+            if(msgListener) msgListener(); // Clear old listener
             const q = query(collection(db, "users", auth.currentUser.uid, "sessions", sid, "messages"), orderBy("timestamp", "asc"));
-            onSnapshot(q, (snapshot) => {
+            msgListener = onSnapshot(q, (snapshot) => {
                 const container = document.getElementById('chat-messages');
                 container.innerHTML = '';
                 snapshot.forEach(doc => {
@@ -162,56 +247,94 @@
         async function askCoach() {
             const input = document.getElementById('chat-input');
             const msg = input.value.trim();
-            if (!msg || !currentSessionId) return;
+            if (!msg) return;
             
-            input.value = '';
+            if(!currentSessionId) await createNewChat();
+            
             const uid = auth.currentUser.uid;
+            input.value = '';
             const msgRef = collection(db, "users", uid, "sessions", currentSessionId, "messages");
             
-            // Save User Message
             await addDoc(msgRef, { text: msg, isUser: true, timestamp: Date.now() });
 
-            // Call AI
             try {
                 const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer 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', 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        model: "llama3-70b-8192",
-                        messages: [{ role: "user", content: msg }]
+                        model: "llama3-70b-8192", // High speed reliable model
+                        messages: [{ role: "user", content: `You are ARC COACH. Talk in Hinglish like an aggressive fitness coach. User: ${userProfile.name}, Streak: ${userProfile.streak}. Question: ${msg}` }]
                     })
                 });
                 const data = await res.json();
                 const reply = data.choices[0].message.content;
-                
-                // Save AI Reply
                 await addDoc(msgRef, { text: reply, isUser: false, timestamp: Date.now() });
                 
-                // Update Session Title if it's the first message
-                updateDoc(doc(db, "users", uid, "sessions", currentSessionId), { title: msg.substring(0, 20) + "..." });
+                // Update Session Title
+                await updateDoc(doc(db, "users", uid, "sessions", currentSessionId), { 
+                    title: msg.substring(0, 20) + (msg.length > 20 ? "..." : "")
+                });
             } catch (e) { console.error(e); }
         }
 
         // UTILS
         function appendMessage(text, isUser) {
             const div = document.createElement('div');
-            div.className = isUser ? 'self-end bg-blue-600 p-4 rounded-2xl rounded-tr-none max-w-[80%]' : 'self-start bg-white/5 p-4 rounded-2xl rounded-tl-none max-w-[80%] border border-white/10';
+            div.className = isUser ? 'self-end bg-blue-600 p-4 rounded-3xl rounded-tr-none max-w-[85%] shadow-lg text-sm' : 'self-start bg-white/5 p-4 rounded-3xl rounded-tl-none max-w-[85%] border border-white/10 text-sm leading-relaxed';
             div.innerText = text;
             document.getElementById('chat-messages').appendChild(div);
         }
 
-        document.getElementById('send-btn').onclick = askCoach;
-        document.getElementById('new-chat-btn').onclick = createNewChat;
-        document.getElementById('show-chat-btn').onclick = () => {
+        function openChat() {
             document.getElementById('dashboard-view').classList.add('hidden');
             document.getElementById('chat-view').classList.remove('hidden');
-        };
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('tasks-container');
+            if (!activeRules.length) return;
+            container.innerHTML = '';
+            const today = new Date().getDate().toString();
+            const now = new Date().getHours() * 60 + new Date().getMinutes();
+            const count = (userProfile?.dailyTaskCounts || {})[today] || 0;
+
+            activeRules.forEach((rule, i) => {
+                const [sH, sM] = (rule.startTime || "00:00").split(':').map(Number);
+                const [eH, eM] = (rule.endTime || "00:00").split(':').map(Number);
+                const isDone = i < count;
+                const isActive = now >= (sH*60+sM) && now <= (eH*60+eM);
+                const isMissed = now > (eH*60+eM) && !isDone;
+                let cls = isDone ? "task-completed" : isActive ? "task-active" : isMissed ? "task-expired" : "";
+                container.innerHTML += `<div class="task-card glass-card ${cls} p-5 rounded-2xl flex justify-between items-center text-xs"><div><h4 class="font-black text-gray-100 uppercase tracking-tight">${rule.text}</h4><p class="text-[10px] text-gray-500 font-mono mt-1">${rule.startTime} - ${rule.endTime}</p></div><div class="font-black text-[9px] tracking-widest">${isDone ? '✓ DONE' : isActive ? '● ACTIVE' : isMissed ? '✕ MISSED' : 'PENDING'}</div></div>`;
+            });
+        }
+
+        function setupLeaderboard() {
+            onSnapshot(query(collection(db, "users"), orderBy("points", "desc"), limit(10)), (snap) => {
+                const b = document.getElementById('leaderboard-body'); b.innerHTML = '';
+                let r = 1; snap.forEach(d => {
+                    b.innerHTML += `<tr class="border-b border-white/5"><td class="py-3 font-black text-blue-500 w-10">#${r}</td><td class="font-bold text-gray-200">${d.data().name}</td><td class="text-right font-black text-gray-400 tracking-tighter">${d.data().points} PTS</td></tr>`;
+                    r++;
+                });
+            });
+        }
+
+        // EVENT LISTENERS
+        document.getElementById('send-btn').onclick = askCoach;
+        document.getElementById('new-chat-btn').onclick = createNewChat;
+        document.getElementById('show-chat-btn').onclick = openChat;
+        document.getElementById('open-chat-float').onclick = openChat;
         document.getElementById('back-to-dash').onclick = () => {
             document.getElementById('chat-view').classList.add('hidden');
             document.getElementById('dashboard-view').classList.remove('hidden');
         };
-        
-        // Checklist logic (same as before) fetch from Firestore config...
+        document.getElementById('edit-name-btn').onclick = async () => {
+            const n = prompt("Change Warrior Name:", userProfile.name);
+            if(n) await updateDoc(doc(db, "users", auth.currentUser.uid), { name: n.trim() });
+        };
+        document.getElementById('login-btn').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
+        document.getElementById('logout-btn').onclick = () => signOut(auth);
+        document.getElementById('chat-input').onkeydown = (e) => { if(e.key==='Enter') askCoach(); };
     </script>
 </body>
 </html>
