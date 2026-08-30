@@ -32,14 +32,14 @@
             <h3 id="countdown-timer" class="text-lg font-mono font-black text-emerald-500 italic tracking-tighter">00d : 00h : 00m : 00s</h3>
         </div>
 
-        <!-- PROFILE CARD -->
-        <div class="glass p-4 rounded-2xl border-l-4 border-blue-500 flex justify-between items-center shadow-lg">
+        <!-- PROFILE CARD (FULL NAME FIX) -->
+        <div class="glass p-4 rounded-2xl border-l-4 border-blue-500 flex justify-between items-center shadow-xl">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center text-xl font-black text-blue-400" id="user-initial">W</div>
                 <div>
-                    <div class="flex items-center gap-1">
-                        <span id="user-name" class="font-bold text-xs truncate max-w-[80px]">Warrior</span>
-                        <button id="edit-name-btn" class="text-[7px] text-blue-400 border border-blue-400/20 px-1 rounded">Edit</button>
+                    <div class="flex items-center gap-2">
+                        <span id="user-name" class="font-bold text-sm text-white whitespace-nowrap">Warrior</span>
+                        <button id="edit-name-btn" class="text-[7px] text-blue-400 border border-blue-400/20 px-1 rounded hover:bg-blue-400/10">Edit</button>
                     </div>
                     <div class="text-[9px] text-yellow-500 font-black tracking-widest"><span id="user-points">0</span> PTS</div>
                 </div>
@@ -52,7 +52,7 @@
 
         <!-- LEADERBOARD -->
         <div class="glass p-3 rounded-2xl">
-            <h3 class="text-[9px] font-black text-yellow-500 uppercase mb-2 tracking-widest flex items-center gap-1">🏆 Ranks</h3>
+            <h3 class="text-[9px] font-black text-yellow-500 uppercase mb-2 tracking-widest flex items-center gap-1">🏆 Top Warriors</h3>
             <table class="w-full text-left text-[9px]"><tbody id="leaderboard-body"></tbody></table>
         </div>
 
@@ -61,21 +61,22 @@
         <div id="tasks-container" class="space-y-1"></div>
     </div>
 
-    <!-- AI COACH -->
+    <!-- AI COACH WINDOW -->
     <div id="chat-window" class="glass rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-blue-500/20">
         <div class="bg-blue-600/10 p-3 border-b border-white/5 flex justify-between items-center">
             <span class="font-black italic text-blue-400 text-[10px]">ARC COACH AI</span>
+            <span class="text-[8px] text-emerald-500 font-bold animate-pulse">DUAL-API ACTIVE</span>
         </div>
         <div id="chat-messages" class="flex-1 overflow-y-auto p-3 flex flex-col">
-            <div class="chat-bubble self-start bg-white/5 text-gray-300">Taiyaar ho Warrior? Winter arc mein maza aane wala hai!</div>
+            <div class="chat-bubble self-start bg-white/5 text-gray-300">Warrior, focus karo. Kya help chahiye? ⚡</div>
         </div>
         <div class="p-2 bg-slate-900/50 flex gap-2 border-t border-white/5">
-            <input type="text" id="chat-input" placeholder="Ask coach..." class="flex-1 bg-transparent rounded-lg px-3 py-1.5 text-[10px] focus:outline-none border border-white/5">
-            <button id="send-btn" class="bg-blue-600 px-3 rounded-lg text-xs">➤</button>
+            <input type="text" id="chat-input" placeholder="Type message..." class="flex-1 bg-transparent rounded-lg px-3 py-1.5 text-[10px] focus:outline-none border border-white/5 text-white">
+            <button id="send-btn" class="bg-blue-600 px-3 rounded-lg text-xs hover:bg-blue-700 transition">➤</button>
         </div>
     </div>
 
-    <button id="chat-toggle" class="fixed bottom-6 right-6 bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl z-50 text-xl">🤖</button>
+    <button id="chat-toggle" class="fixed bottom-6 right-6 bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl z-50 text-xl hover:scale-105 active:scale-95 transition">🤖</button>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -127,14 +128,13 @@
             const today = new Date().getDate().toString();
             const now = new Date().getHours() * 60 + new Date().getMinutes();
             const count = (userProfile?.dailyTaskCounts || {})[today] || 0;
-
             rules.forEach((r, i) => {
                 const [sH, sM] = (r.startTime || "00:00").split(':').map(Number);
                 const [eH, eM] = (r.endTime || "00:00").split(':').map(Number);
-                const isDone = i < count;
-                const isActive = now >= (sH*60+sM) && now <= (eH*60+eM);
-                let cls = isDone ? "done" : isActive ? "active-task" : "";
-                container.innerHTML += `<div class="task-card glass rounded-xl flex justify-between items-center ${cls}"><div><div class="font-bold text-gray-100 uppercase text-[10px]">${r.text}</div><div class="text-[8px] text-gray-500 font-mono">${r.startTime} - ${r.endTime}</div></div><div class="text-[9px] font-black opacity-40 uppercase tracking-tighter">${isDone ? '✓ DONE' : isActive ? '● LIVE' : 'WAIT'}</div></div>`;
+                const done = i < count;
+                const active = now >= (sH*60+sM) && now <= (eH*60+eM);
+                let cls = done ? "done" : active ? "active-task" : "";
+                container.innerHTML += `<div class="task-card glass rounded-xl flex justify-between items-center ${cls}"><div><div class="font-bold text-gray-100 uppercase text-[10px]">${r.text}</div><div class="text-[8px] text-gray-500 font-mono">${r.startTime} - ${r.endTime}</div></div><div class="text-[9px] font-black opacity-40 uppercase tracking-tighter">${done ? '✓ DONE' : active ? '● LIVE' : 'WAIT'}</div></div>`;
             });
         }
 
@@ -146,20 +146,36 @@
             i.value = '';
             const lid = 'L-' + Date.now();
             appendMsg("Coach typing...", false, lid);
+
+            // DUAL API LOGIC: Try Gemini first, then Groq
             try {
-                const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                // 1. Try Gemini
+                const geminiRes = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AQ.Ab8RN6LMLMaAfXEbUpmGtIlD4qWuiFm7lVbG96TUguyVcRW1Dw', {
                     method: 'POST',
-                    headers: { 'Authorization': 'Bearer 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', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: "llama-3.1-8b-instant", messages: [{ role: "user", content: `Hinglish Coach reply to ${userProfile.name}: ${msg}` }] })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: `You are ARC COACH. Talk in Hinglish as aggressive coach. User ${userProfile.name}. Question: ${msg}` }] }] })
                 });
-                const d = await res.json();
-                document.getElementById(lid).innerText = d.choices[0].message.content;
-            } catch (e) { document.getElementById(lid).innerText = "Net check karo Warrior!"; }
+                const gData = await geminiRes.json();
+                document.getElementById(lid).innerText = gData.candidates[0].content.parts[0].text;
+            } catch (err) {
+                // 2. Fallback to Groq if Gemini fails
+                try {
+                    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer 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', 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ model: "llama-3.1-8b-instant", messages: [{ role: "user", content: `Hinglish Coach reply to ${userProfile.name}: ${msg}` }] })
+                    });
+                    const groqData = await groqRes.json();
+                    document.getElementById(lid).innerText = groqData.choices[0].message.content;
+                } catch (e2) {
+                    document.getElementById(lid).innerText = "Both AI Offline! Net check karo Warrior.";
+                }
+            }
         }
 
         function appendMsg(t, u, id) {
             const d = document.createElement('div');
-            d.className = `chat-bubble ${u ? 'self-end bg-blue-600' : 'self-start bg-white/10 border border-white/5'}`;
+            d.className = `chat-bubble ${u ? 'self-end bg-blue-600 text-white' : 'self-start bg-white/10 border border-white/5 text-gray-300'}`;
             if(id) d.id = id;
             d.innerText = t;
             const c = document.getElementById('chat-messages'); c.appendChild(d); c.scrollTop = c.scrollHeight;
