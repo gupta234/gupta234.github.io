@@ -150,7 +150,7 @@
                 const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer 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', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: "llama3-8b-8192", messages: [{ role: "user", content: `Hinglish Coach reply to ${userProfile.name}: ${msg}` }] })
+                    body: JSON.stringify({ model: "llama-3.1-8b-instant", messages: [{ role: "user", content: `Hinglish Coach reply to ${userProfile.name}: ${msg}` }] })
                 });
                 const d = await res.json();
                 document.getElementById(lid).innerText = d.choices[0].message.content;
