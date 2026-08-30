@@ -26,57 +26,57 @@
             <button id="logout-btn" class="text-[8px] text-red-500 opacity-40 uppercase font-bold">Logout</button>
         </div>
 
-        <!-- TIMER -->
+        <!-- Timer -->
         <div class="bg-emerald-600/10 border border-emerald-500/30 p-4 rounded-2xl text-center shadow-lg">
             <p class="text-gray-400 text-[9px] font-bold tracking-widest uppercase mb-1">Challenge Starts In</p>
             <h3 id="countdown-timer" class="text-lg font-mono font-black text-emerald-500 italic">00d : 00h : 00m : 00s</h3>
         </div>
 
-        <!-- PROFILE (WARRIOR NAME FIXED) -->
+        <!-- Profile Card -->
         <div class="glass p-4 rounded-2xl border-l-4 border-blue-500 flex justify-between items-center shadow-xl">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center text-xl font-black text-blue-400" id="user-initial">W</div>
-                <div>
+            <div class="flex items-center gap-3 overflow-hidden">
+                <div class="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center text-xl font-black text-blue-400 shrink-0" id="user-initial">W</div>
+                <div class="overflow-hidden">
                     <div class="flex items-center gap-2">
-                        <span id="user-name" class="font-bold text-sm text-white whitespace-nowrap">Warrior</span>
-                        <button id="edit-name-btn" class="text-[7px] text-blue-400 border border-blue-400/20 px-1 rounded">Edit</button>
+                        <span id="user-name" class="font-bold text-sm text-white whitespace-nowrap overflow-hidden">Warrior</span>
+                        <button id="edit-name-btn" class="text-[7px] text-blue-400 border border-blue-400/20 px-1 rounded shrink-0">Edit</button>
                     </div>
                     <div class="text-[9px] text-yellow-500 font-black tracking-widest"><span id="user-points">0</span> PTS</div>
                 </div>
             </div>
-            <div class="text-right">
+            <div class="text-right shrink-0">
                 <div class="text-[7px] text-gray-500 font-black uppercase">Streak 🔥</div>
                 <div id="user-streak" class="text-base font-black text-orange-500">0 Days</div>
             </div>
         </div>
 
-        <!-- LEADERBOARD -->
+        <!-- Leaderboard -->
         <div class="glass p-3 rounded-2xl">
-            <h3 class="text-[9px] font-black text-yellow-500 uppercase mb-2 tracking-widest flex items-center gap-1">🏆 Ranks</h3>
+            <h3 class="text-[9px] font-black text-yellow-500 uppercase mb-2 tracking-widest">🏆 Leaderboard</h3>
             <table class="w-full text-left text-[9px]"><tbody id="leaderboard-body"></tbody></table>
         </div>
 
-        <!-- CHECKLIST -->
+        <!-- Checklist -->
         <h3 class="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-4">📋 Daily Schedule</h3>
         <div id="tasks-container" class="space-y-1"></div>
     </div>
 
-    <!-- AI COACH WINDOW -->
+    <!-- AI Coach -->
     <div id="chat-window" class="glass rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-blue-500/20">
         <div class="bg-blue-600/10 p-3 border-b border-white/5 flex justify-between items-center">
             <span class="font-black italic text-blue-400 text-[10px]">ARC COACH AI</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
         </div>
         <div id="chat-messages" class="flex-1 overflow-y-auto p-3 flex flex-col">
-            <div class="chat-bubble self-start bg-white/5 text-gray-300">Warrior, focus karo. Winter Arc mein rukhna mana hai! ⚡</div>
+            <div class="chat-bubble self-start bg-white/5 text-gray-300">Warrior, focus karo. Kya help chahiye? ⚡</div>
         </div>
         <div class="p-2 bg-slate-900/50 flex gap-2 border-t border-white/5">
-            <input type="text" id="chat-input" placeholder="Ask coach..." class="flex-1 bg-transparent rounded-lg px-3 py-1.5 text-[10px] focus:outline-none border border-white/5 text-white">
-            <button id="send-btn" class="bg-blue-600 px-3 rounded-lg text-xs transition active:scale-95">➤</button>
+            <input type="text" id="chat-input" placeholder="Type here..." class="flex-1 bg-transparent rounded-lg px-3 py-1.5 text-[10px] focus:outline-none border border-white/5 text-white">
+            <button id="send-btn" class="bg-blue-600 px-3 rounded-lg text-xs">➤</button>
         </div>
     </div>
 
-    <!-- FLOAT BUTTON -->
-    <button id="chat-toggle" class="fixed bottom-6 right-6 bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl z-50 text-xl">🤖</button>
+    <button id="chat-toggle" class="fixed bottom-6 right-6 bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl text-xl z-50">🤖</button>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -128,12 +128,15 @@
             const today = new Date().getDate().toString();
             const count = (userProfile?.dailyTaskCounts || {})[today] || 0;
             rules.forEach((r, i) => {
-                const isDone = i < count;
-                container.innerHTML += `<div class="task-card glass rounded-xl flex justify-between items-center ${isDone ? 'done' : ''}"><div><div class="font-bold text-gray-100 uppercase text-[10px]">${r.text}</div><div class="text-[8px] text-gray-500 font-mono">${r.startTime} - ${r.endTime}</div></div><div class="text-[9px] font-black opacity-40 uppercase tracking-tighter">${isDone ? '✓ DONE' : 'WAIT'}</div></div>`;
+                const [sH, sM] = (r.startTime || "00:00").split(':').map(Number);
+                const [eH, eM] = (r.endTime || "00:00").split(':').map(Number);
+                const done = i < count;
+                const now = new Date().getHours() * 60 + new Date().getMinutes();
+                const active = now >= (sH*60+sM) && now <= (eH*60+eM);
+                container.innerHTML += `<div class="task-card glass rounded-xl flex justify-between items-center ${done ? 'done' : ''} ${active ? 'active-task' : ''}"><div><div class="font-bold text-gray-100 uppercase text-[10px]">${r.text}</div><div class="text-[8px] text-gray-500 font-mono">${r.startTime} - ${r.endTime}</div></div><div class="text-[9px] font-black opacity-40 uppercase tracking-tighter">${done ? '✓ DONE' : active ? '● LIVE' : 'WAIT'}</div></div>`;
             });
         }
 
-        // ORIGINAL WORKING AI LOGIC
         async function askCoach() {
             const i = document.getElementById('chat-input');
             const msg = i.value.trim();
@@ -142,26 +145,23 @@
             appendMsg(msg, true);
             i.value = '';
             const lid = 'L-' + Date.now();
-            appendMsg("...", false, lid);
+            appendMsg("Writing...", false, lid);
 
             try {
-                // Pehla working model: llama3-70b-8192
                 const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
                     headers: { 
-                        'Authorization': 'Bearer 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',
+                        'Authorization': 'Bearer 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',
                         'Content-Type': 'application/json' 
                     },
                     body: JSON.stringify({
-                        model: "llama3-70b-8192", 
-                        messages: [{ role: "user", content: `Speak in Hinglish like ARC COACH. User: ${userProfile.name}. Message: ${msg}` }]
+                        model: "llama-3.1-70b-versatile", 
+                        messages: [{ role: "user", content: `System: Hinglish aggressive fitness coach. User ${userProfile.name}. Question: ${msg}` }]
                     })
                 });
                 const d = await res.json();
                 document.getElementById(lid).innerText = d.choices[0].message.content;
-            } catch (e) {
-                document.getElementById(lid).innerText = "Net check karo Warrior, Coach offline hai!";
-            }
+            } catch (e) { document.getElementById(lid).innerText = "Net Check karo Warrior!"; }
         }
 
         function appendMsg(t, u, id) {
@@ -193,7 +193,7 @@
 
         document.getElementById('chat-toggle').onclick = () => document.getElementById('chat-window').classList.toggle('active');
         document.getElementById('send-btn').onclick = askCoach;
-        document.getElementById('edit-name-btn').onclick = async () => { const n = prompt("Name:", userProfile.name); if(n) await updateDoc(doc(db, "users", auth.currentUser.uid), { name: n.trim() }); };
+        document.getElementById('edit-name-btn').onclick = async () => { const n = prompt("Warrior Name:", userProfile.name); if(n) await updateDoc(doc(db, "users", auth.currentUser.uid), { name: n.trim() }); };
         document.getElementById('logout-btn').onclick = () => signOut(auth);
         document.getElementById('chat-input').onkeydown = (e) => { if(e.key==='Enter') askCoach(); };
         setInterval(updateTimer, 1000); updateTimer();
