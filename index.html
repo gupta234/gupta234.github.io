@@ -198,20 +198,43 @@
         }
 
         async function askCoach() {
-            const i = document.getElementById('chat-input');
-            const msg = i.value.trim();
-            if(!msg || !userProfile) return;
-            appendMsg(msg, true); i.value = '';
-            const lid = 'L-' + Date.now(); appendMsg("...", false, lid);
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if (!msg || !userProfile) return;
+
+            appendMsg(msg, true);
+            input.value = '';
+
+            const loadingId = 'L-' + Date.now();
+            appendMsg("...", false, loadingId);
+
             try {
-                const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer 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', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: "llama-3.1-70b-versatile", messages: [{ role: "user", content: `Hinglish aggressive coach reply to ${userProfile.name}: ${msg}` }] })
-                });
-                const d = await res.json();
-                document.getElementById(lid).innerText = d.choices[0].message.content;
-            } catch (e) { document.getElementById(lid).innerText = "Net check karo Warrior!"; }
+                const response = await fetch(
+                    'https://winter.gupta07animesh.workers.dev/',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: msg,
+                            name: userProfile.name
+                        })
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'AI request failed');
+                }
+
+                document.getElementById(loadingId).innerText = data.reply;
+            } catch (error) {
+                console.error(error);
+                document.getElementById(loadingId).innerText =
+                    "ARC Coach abhi response nahi de pa raha.";
+            }
         }
 
         function appendMsg(t, u, id) {
