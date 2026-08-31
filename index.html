@@ -8,9 +8,10 @@
     <style>
         body { background: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; font-size: 11px; overflow-x: hidden; }
         .glass { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
-        .task-card { border-left: 3px solid transparent; transition: 0.2s; margin-bottom: 6px; padding: 10px; }
-        .done { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.05); }
-        .active-task { border-left-color: #22c55e; background: rgba(34, 197, 94, 0.05); }
+        .task-card { border-left: 3px solid transparent; transition: 0.2s; margin-bottom: 6px; padding: 10px; cursor: pointer; }
+        .task-card:active { transform: scale(0.98); }
+        .done { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.1); pointer-events: none; }
+        .active-task { border-left-color: #22c55e; background: rgba(34, 197, 94, 0.1); border-right: 1px solid rgba(34, 197, 94, 0.2); }
         #chat-window { position: fixed; bottom: 80px; right: 20px; width: 280px; height: 380px; z-index: 100; transition: 0.3s; transform: translateY(20px); opacity: 0; pointer-events: none; }
         #chat-window.active { transform: translateY(0); opacity: 1; pointer-events: all; }
         .chat-bubble { padding: 8px 12px; border-radius: 12px; max-width: 85%; margin-bottom: 8px; font-size: 10px; line-height: 1.4; }
@@ -26,13 +27,11 @@
             <button id="logout-btn" class="text-[8px] text-red-500 opacity-40 uppercase font-bold">Logout</button>
         </div>
 
-        <!-- 1 Sept Countdown -->
         <div class="bg-emerald-600/10 border border-emerald-500/30 p-4 rounded-2xl text-center shadow-lg">
             <p class="text-gray-400 text-[9px] font-bold tracking-widest uppercase mb-1">Challenge Starts In</p>
             <h3 id="countdown-timer" class="text-lg font-mono font-black text-emerald-500 italic">00d : 00h : 00m : 00s</h3>
         </div>
 
-        <!-- Profile Section (Name Fix) -->
         <div class="glass p-4 rounded-2xl border-l-4 border-blue-500 flex justify-between items-center shadow-xl">
             <div class="flex items-center gap-3 overflow-hidden">
                 <div class="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center text-xl font-black text-blue-400 shrink-0" id="user-initial">W</div>
@@ -44,28 +43,24 @@
                     <div class="text-[9px] text-yellow-500 font-black tracking-widest uppercase"><span id="user-points">0</span> PTS</div>
                 </div>
             </div>
-            <div class="text-right shrink-0 ml-2">
+            <div class="text-right ml-2 shrink-0">
                 <div class="text-[7px] text-gray-500 font-black uppercase">Streak 🔥</div>
                 <div id="user-streak" class="text-base font-black text-orange-500">0 Days</div>
             </div>
         </div>
 
-        <!-- Leaderboard (Full Name Visibility Fix) -->
         <div class="glass p-3 rounded-2xl shadow-lg">
-            <h3 class="text-[9px] font-black text-yellow-500 uppercase mb-2 tracking-widest">🏆 Top Warriors</h3>
-            <table class="w-full text-left text-[10px] border-collapse">
-                <tbody id="leaderboard-body">
-                    <!-- Data injected here -->
-                </tbody>
+            <h3 class="text-[9px] font-black text-yellow-500 uppercase mb-2 tracking-widest flex items-center gap-1">🏆 Top Warriors</h3>
+            <table class="w-full text-left text-[10px] border-separate border-spacing-y-1">
+                <tbody id="leaderboard-body"></tbody>
             </table>
         </div>
 
-        <!-- Checklist with Time -->
-        <h3 class="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-4">📋 Daily Schedule</h3>
+        <h3 class="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-4">📋 Daily Checklist (Click to Tick)</h3>
         <div id="tasks-container" class="space-y-1"></div>
     </div>
 
-    <!-- AI Coach Window -->
+    <!-- AI COACH -->
     <div id="chat-window" class="glass rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-blue-500/20">
         <div class="bg-blue-600/10 p-3 border-b border-white/5 flex justify-between items-center">
             <span class="font-black italic text-blue-400 text-[10px]">ARC COACH AI</span>
@@ -75,17 +70,16 @@
         </div>
         <div class="p-2 bg-slate-900/50 flex gap-2 border-t border-white/5">
             <input type="text" id="chat-input" placeholder="Ask coach..." class="flex-1 bg-transparent rounded-lg px-3 py-1.5 text-[10px] focus:outline-none border border-white/5 text-white">
-            <button id="send-btn" class="bg-blue-600 px-3 rounded-lg text-xs">➤</button>
+            <button id="send-btn" class="bg-blue-600 px-3 rounded-lg text-xs transition active:scale-95">➤</button>
         </div>
     </div>
 
-    <!-- Toggle Button -->
     <button id="chat-toggle" class="fixed bottom-6 right-6 bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl z-50 text-xl">🤖</button>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, collection, query, orderBy, limit, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, collection, query, orderBy, limit, getDoc, setDoc, updateDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCZqTzcU4kK5nkEkB1UcBQlMA-lOv0EPl0",
@@ -125,6 +119,42 @@
             if (!s.exists()) await setDoc(ref, { uid: user.uid, name: user.displayName || "Warrior", points: 0, streak: 0, dailyTaskCounts: {} });
         }
 
+        // --- TASK TICK LOGIC (POINT SYSTEM) ---
+        window.toggleRuleWeb = async (ruleIndex) => {
+            const rule = rules[ruleIndex];
+            const now = new Date();
+            const currentMins = now.getHours() * 60 + now.getMinutes();
+            const [sH, sM] = rule.startTime.split(':').map(Number);
+            const [eH, eM] = rule.endTime.split(':').map(Number);
+            const startMins = sH * 60 + sM;
+            const endMins = eH * 60 + eM;
+
+            if (currentMins >= startMins && currentMins <= endMins) {
+                const userRef = doc(db, "users", auth.currentUser.uid);
+                const today = now.getDate().toString();
+
+                try {
+                    await runTransaction(db, async (transaction) => {
+                        const userSnap = await transaction.get(userRef);
+                        const userData = userSnap.data();
+                        const counts = userData.dailyTaskCounts || {};
+                        const currentCount = counts[today] || 0;
+
+                        // Check if this task is already done (Index logic)
+                        if (ruleIndex >= currentCount) {
+                            transaction.update(userRef, {
+                                points: (userData.points || 0) + 10,
+                                [`dailyTaskCounts.${today}`]: currentCount + 1
+                            });
+                        }
+                    });
+                    alert("Task Completed! +10 Points Earned 🔥");
+                } catch (e) { console.error(e); }
+            } else {
+                alert("Abhi is task ka time nahi hua hai! Scheduled time check karein.");
+            }
+        };
+
         function updateChecklist() {
             const container = document.getElementById('tasks-container');
             if(!rules.length) return;
@@ -138,8 +168,16 @@
                 const [eH, eM] = (r.endTime || "00:00").split(':').map(Number);
                 const isDone = i < count;
                 const isActive = now >= (sH*60+sM) && now <= (eH*60+eM);
+                
                 let cls = isDone ? "done" : isActive ? "active-task" : "";
-                container.innerHTML += `<div class="task-card glass rounded-xl flex justify-between items-center ${cls}"><div><div class="font-bold text-gray-100 uppercase text-[10px] tracking-tight">${r.text}</div><div class="text-[8px] text-gray-500 font-mono">${r.startTime} - ${r.endTime}</div></div><div class="text-[9px] font-black opacity-40 uppercase">${isDone ? '✓ DONE' : isActive ? '● LIVE' : 'WAIT'}</div></div>`;
+                container.innerHTML += `
+                    <div class="task-card glass rounded-xl flex justify-between items-center ${cls}" onclick="toggleRuleWeb(${i})">
+                        <div>
+                            <div class="font-bold text-gray-100 uppercase text-[10px]">${r.text}</div>
+                            <div class="text-[8px] text-gray-500 font-mono">${r.startTime} - ${r.endTime}</div>
+                        </div>
+                        <div class="text-[9px] font-black opacity-40 uppercase tracking-tighter">${isDone ? '✓ DONE' : isActive ? '● LIVE' : 'WAIT'}</div>
+                    </div>`;
             });
         }
 
@@ -176,7 +214,7 @@
                     b.innerHTML += `
                         <tr class="border-b border-white/5">
                             <td class="py-2 pr-2 text-blue-500 font-bold w-8 shrink-0">#${r}</td>
-                            <td class="py-2 font-bold text-gray-300 break-words leading-tight pr-2">${data.name || 'Warrior'}</td>
+                            <td class="py-2 font-bold text-gray-300 break-words pr-2">${data.name || 'Warrior'}</td>
                             <td class="py-2 text-right font-black opacity-40 whitespace-nowrap w-16">${data.points || 0} P</td>
                         </tr>`;
                     r++;
