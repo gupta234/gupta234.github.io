@@ -10,8 +10,8 @@
         .glass { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
         .task-card { border-left: 3px solid transparent; transition: 0.2s; margin-bottom: 6px; padding: 10px; cursor: pointer; }
         .task-card:active { transform: scale(0.98); }
-        .done { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.1); pointer-events: none; }
-        .active-task { border-left-color: #22c55e; background: rgba(34, 197, 94, 0.1); border-right: 1px solid rgba(34, 197, 94, 0.2); }
+        .done { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.1); pointer-events: none; opacity: 0.8; }
+        .active-task { border-left-color: #22c55e; background: rgba(34, 197, 94, 0.1); }
         #chat-window { position: fixed; bottom: 80px; right: 20px; width: 280px; height: 380px; z-index: 100; transition: 0.3s; transform: translateY(20px); opacity: 0; pointer-events: none; }
         #chat-window.active { transform: translateY(0); opacity: 1; pointer-events: all; }
         .chat-bubble { padding: 8px 12px; border-radius: 12px; max-width: 85%; margin-bottom: 8px; font-size: 10px; line-height: 1.4; }
@@ -29,7 +29,7 @@
 
         <div class="bg-emerald-600/10 border border-emerald-500/30 p-4 rounded-2xl text-center shadow-lg">
             <p class="text-gray-400 text-[9px] font-bold tracking-widest uppercase mb-1">Challenge Starts In</p>
-            <h3 id="countdown-timer" class="text-lg font-mono font-black text-emerald-500 italic">00d : 00h : 00m : 00s</h3>
+            <h3 id="countdown-timer" class="text-lg font-mono font-black text-emerald-500 italic tracking-tighter">00d : 00h : 00m : 00s</h3>
         </div>
 
         <div class="glass p-4 rounded-2xl border-l-4 border-blue-500 flex justify-between items-center shadow-xl">
@@ -37,10 +37,10 @@
                 <div class="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center text-xl font-black text-blue-400 shrink-0" id="user-initial">W</div>
                 <div class="flex-1 overflow-hidden">
                     <div class="flex items-center gap-2">
-                        <span id="user-name" class="font-bold text-sm text-white break-words">Warrior</span>
-                        <button id="edit-name-btn" class="text-[7px] text-blue-400 border border-blue-400/20 px-1 rounded shrink-0">Edit</button>
+                        <span id="user-name" class="font-bold text-sm text-white whitespace-nowrap">Warrior</span>
+                        <button id="edit-name-btn" class="text-[7px] text-blue-400 border border-blue-400/20 px-1 rounded">Edit</button>
                     </div>
-                    <div class="text-[9px] text-yellow-500 font-black tracking-widest uppercase"><span id="user-points">0</span> PTS</div>
+                    <div class="text-[9px] text-yellow-500 font-black tracking-widest"><span id="user-points">0</span> PTS</div>
                 </div>
             </div>
             <div class="text-right ml-2 shrink-0">
@@ -51,12 +51,10 @@
 
         <div class="glass p-3 rounded-2xl shadow-lg">
             <h3 class="text-[9px] font-black text-yellow-500 uppercase mb-2 tracking-widest flex items-center gap-1">🏆 Top Warriors</h3>
-            <table class="w-full text-left text-[10px] border-separate border-spacing-y-1">
-                <tbody id="leaderboard-body"></tbody>
-            </table>
+            <table class="w-full text-left text-[10px] border-collapse"><tbody id="leaderboard-body"></tbody></table>
         </div>
 
-        <h3 class="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-4">📋 Daily Checklist (Click to Tick)</h3>
+        <h3 class="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-4">📋 Daily Checklist</h3>
         <div id="tasks-container" class="space-y-1"></div>
     </div>
 
@@ -66,11 +64,11 @@
             <span class="font-black italic text-blue-400 text-[10px]">ARC COACH AI</span>
         </div>
         <div id="chat-messages" class="flex-1 overflow-y-auto p-3 flex flex-col">
-            <div class="chat-bubble self-start bg-white/5 text-gray-300">Warrior, focus karo. Winter Arc mein rukhna mana hai! ⚡</div>
+            <div class="chat-bubble self-start bg-white/5 text-gray-300">Warrior, focus karo. Kal se tabahi shuru karni hai! ⚡</div>
         </div>
         <div class="p-2 bg-slate-900/50 flex gap-2 border-t border-white/5">
-            <input type="text" id="chat-input" placeholder="Ask coach..." class="flex-1 bg-transparent rounded-lg px-3 py-1.5 text-[10px] focus:outline-none border border-white/5 text-white">
-            <button id="send-btn" class="bg-blue-600 px-3 rounded-lg text-xs transition active:scale-95">➤</button>
+            <input type="text" id="chat-input" placeholder="Type message..." class="flex-1 bg-transparent rounded-lg px-3 py-1.5 text-[10px] focus:outline-none border border-white/5 text-white">
+            <button id="send-btn" class="bg-blue-600 px-3 rounded-lg text-xs">➤</button>
         </div>
     </div>
 
@@ -96,6 +94,7 @@
 
         let userProfile = null;
         let rules = [];
+        const CHALLENGE_START_DATE = new Date(2026, 8, 1); // 1 Sept
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -116,43 +115,70 @@
         async function syncUser(user) {
             const ref = doc(db, "users", user.uid);
             const s = await getDoc(ref);
-            if (!s.exists()) await setDoc(ref, { uid: user.uid, name: user.displayName || "Warrior", points: 0, streak: 0, dailyTaskCounts: {} });
+            if (!s.exists()) await setDoc(ref, { uid: user.uid, name: user.displayName || "Warrior", points: 0, streak: 0, dailyTaskCounts: {}, attendance: {} });
         }
 
-        // --- TASK TICK LOGIC (POINT SYSTEM) ---
-        window.toggleRuleWeb = async (ruleIndex) => {
-            const rule = rules[ruleIndex];
+        // --- STREAK CALCULATION LOGIC ---
+        function calculateStreakJS(attendance) {
+            let currentStreak = 0;
             const now = new Date();
+            if (now < CHALLENGE_START_DATE) return 0;
+            
+            const todayNum = now.getDate();
+            for (let day = 1; day <= todayNum; day++) {
+                if (attendance[day.toString()] === "present") {
+                    currentStreak++;
+                } else if (day < todayNum) {
+                    currentStreak = 0; // Streak reset if a previous day was missed
+                }
+            }
+            return currentStreak;
+        }
+
+        window.toggleRuleWeb = async (ruleIndex) => {
+            const now = new Date();
+            if (now < CHALLENGE_START_DATE) return alert("Challenge starts 1st Sept!");
+
+            const rule = rules[ruleIndex];
+            const today = now.getDate().toString();
             const currentMins = now.getHours() * 60 + now.getMinutes();
             const [sH, sM] = rule.startTime.split(':').map(Number);
             const [eH, eM] = rule.endTime.split(':').map(Number);
-            const startMins = sH * 60 + sM;
-            const endMins = eH * 60 + eM;
 
-            if (currentMins >= startMins && currentMins <= endMins) {
-                const userRef = doc(db, "users", auth.currentUser.uid);
-                const today = now.getDate().toString();
+            if (currentMins < (sH*60+sM) || currentMins > (eH*60+eM)) return alert("Not in time!");
 
-                try {
-                    await runTransaction(db, async (transaction) => {
-                        const userSnap = await transaction.get(userRef);
-                        const userData = userSnap.data();
-                        const counts = userData.dailyTaskCounts || {};
-                        const currentCount = counts[today] || 0;
+            const currentCount = (userProfile?.dailyTaskCounts || {})[today] || 0;
+            if (ruleIndex < currentCount) return alert("Already done!");
+            if (ruleIndex > currentCount) return alert("Follow sequence!");
 
-                        // Check if this task is already done (Index logic)
-                        if (ruleIndex >= currentCount) {
-                            transaction.update(userRef, {
-                                points: (userData.points || 0) + 10,
-                                [`dailyTaskCounts.${today}`]: currentCount + 1
-                            });
+            const userRef = doc(db, "users", auth.currentUser.uid);
+            try {
+                await runTransaction(db, async (t) => {
+                    const snap = await t.get(userRef);
+                    const data = snap.data();
+                    const latestCount = (data.dailyTaskCounts || {})[today] || 0;
+                    
+                    if (ruleIndex === latestCount) {
+                        const newCount = latestCount + 1;
+                        let updates = { 
+                            points: (data.points || 0) + 10,
+                            [`dailyTaskCounts.${today}`]: newCount 
+                        };
+
+                        // STREAK LOGIC: 5 Tasks = 1 Streak Day
+                        if (newCount === 5) {
+                            const attendance = data.attendance || {};
+                            if (attendance[today] !== "present") {
+                                attendance[today] = "present";
+                                updates.attendance = attendance;
+                                updates.streak = calculateStreakJS(attendance);
+                            }
                         }
-                    });
-                    alert("Task Completed! +10 Points Earned 🔥");
-                } catch (e) { console.error(e); }
-            } else {
-                alert("Abhi is task ka time nahi hua hai! Scheduled time check karein.");
-            }
+                        t.update(userRef, updates);
+                    }
+                });
+                alert("Verified! +10 PTS 🔥");
+            } catch (e) { console.error(e); }
         };
 
         function updateChecklist() {
@@ -161,23 +187,13 @@
             container.innerHTML = '';
             const today = new Date().getDate().toString();
             const count = (userProfile?.dailyTaskCounts || {})[today] || 0;
-            const now = new Date().getHours() * 60 + new Date().getMinutes();
-
+            const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
             rules.forEach((r, i) => {
                 const [sH, sM] = (r.startTime || "00:00").split(':').map(Number);
                 const [eH, eM] = (r.endTime || "00:00").split(':').map(Number);
                 const isDone = i < count;
-                const isActive = now >= (sH*60+sM) && now <= (eH*60+eM);
-                
-                let cls = isDone ? "done" : isActive ? "active-task" : "";
-                container.innerHTML += `
-                    <div class="task-card glass rounded-xl flex justify-between items-center ${cls}" onclick="toggleRuleWeb(${i})">
-                        <div>
-                            <div class="font-bold text-gray-100 uppercase text-[10px]">${r.text}</div>
-                            <div class="text-[8px] text-gray-500 font-mono">${r.startTime} - ${r.endTime}</div>
-                        </div>
-                        <div class="text-[9px] font-black opacity-40 uppercase tracking-tighter">${isDone ? '✓ DONE' : isActive ? '● LIVE' : 'WAIT'}</div>
-                    </div>`;
+                const isActive = (new Date() >= CHALLENGE_START_DATE) && (nowMins >= (sH*60+sM) && nowMins <= (eH*60+eM));
+                container.innerHTML += `<div class="task-card glass rounded-xl flex justify-between items-center ${isDone ? 'done' : isActive ? 'active-task' : ''}" onclick="toggleRuleWeb(${i})"><div><div class="font-bold text-gray-100 uppercase text-[10px]">${r.text}</div><div class="text-[8px] text-gray-500 font-mono">${r.startTime} - ${r.endTime}</div></div><div class="text-[9px] font-black opacity-40 uppercase">${isDone ? '✓ DONE' : isActive ? '● LIVE' : 'WAIT'}</div></div>`;
             });
         }
 
@@ -191,7 +207,7 @@
                 const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer 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', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: "llama-3.1-70b-versatile", messages: [{ role: "user", content: `Aggressive Hinglish Fitness Coach reply to ${userProfile.name}: ${msg}` }] })
+                    body: JSON.stringify({ model: "llama-3.1-70b-versatile", messages: [{ role: "user", content: `Hinglish aggressive coach reply to ${userProfile.name}: ${msg}` }] })
                 });
                 const d = await res.json();
                 document.getElementById(lid).innerText = d.choices[0].message.content;
@@ -201,8 +217,7 @@
         function appendMsg(t, u, id) {
             const d = document.createElement('div');
             d.className = `chat-bubble ${u ? 'self-end bg-blue-600 text-white' : 'self-start bg-white/10 border border-white/5 text-gray-300'}`;
-            if(id) d.id = id;
-            d.innerText = t;
+            if(id) d.id = id; d.innerText = t;
             const c = document.getElementById('chat-messages'); c.appendChild(d); c.scrollTop = c.scrollHeight;
         }
 
@@ -210,21 +225,14 @@
             onSnapshot(query(collection(db, "users"), orderBy("points", "desc"), limit(10)), (snap) => {
                 const b = document.getElementById('leaderboard-body'); b.innerHTML = '';
                 let r = 1; snap.forEach(d => {
-                    const data = d.data();
-                    b.innerHTML += `
-                        <tr class="border-b border-white/5">
-                            <td class="py-2 pr-2 text-blue-500 font-bold w-8 shrink-0">#${r}</td>
-                            <td class="py-2 font-bold text-gray-300 break-words pr-2">${data.name || 'Warrior'}</td>
-                            <td class="py-2 text-right font-black opacity-40 whitespace-nowrap w-16">${data.points || 0} P</td>
-                        </tr>`;
+                    b.innerHTML += `<tr class="border-b border-white/5"><td class="py-2 pr-2 text-blue-500 font-bold w-8">#${r}</td><td class="py-2 font-bold text-gray-300 break-words pr-2">${d.data().name}</td><td class="py-2 text-right font-black opacity-40">${d.data().points} P</td></tr>`;
                     r++;
                 });
             });
         }
 
         function updateTimer() {
-            const target = new Date(2026, 8, 1);
-            const diff = target - new Date();
+            const diff = CHALLENGE_START_DATE - new Date();
             if (diff > 0) {
                 const d = Math.floor(diff/86400000); const h = Math.floor((diff/3600000)%24); const m = Math.floor((diff/60000)%60); const s = Math.floor((diff/1000)%60);
                 document.getElementById('countdown-timer').innerText = `${d}d : ${h}h : ${m}m : ${s}s`;
