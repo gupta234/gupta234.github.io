@@ -10,13 +10,16 @@
         .glass { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
         .task-card { border-left: 3px solid transparent; transition: 0.2s; margin-bottom: 6px; padding: 10px; cursor: pointer; }
         .task-card:active { transform: scale(0.98); }
-        .done { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.1); pointer-events: none; opacity: 0.8; }
+        .done { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.1); opacity: 0.8; }
         .active-task { border-left-color: #22c55e; background: rgba(34, 197, 94, 0.1); }
         #chat-window { position: fixed; bottom: 80px; right: 20px; width: 280px; height: 380px; z-index: 100; transition: 0.3s; transform: translateY(20px); opacity: 0; pointer-events: none; }
         #chat-window.active { transform: translateY(0); opacity: 1; pointer-events: all; }
         .chat-bubble { padding: 8px 12px; border-radius: 12px; max-width: 85%; margin-bottom: 8px; font-size: 10px; line-height: 1.4; }
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+        
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
+        .modal.active { display: flex; }
     </style>
 </head>
 <body class="p-4 flex flex-col items-center">
@@ -27,11 +30,13 @@
             <button id="logout-btn" class="text-[8px] text-red-500 opacity-40 uppercase font-bold">Logout</button>
         </div>
 
+        <!-- Timer Section -->
         <div class="bg-emerald-600/10 border border-emerald-500/30 p-4 rounded-2xl text-center shadow-lg">
             <p class="text-gray-400 text-[9px] font-bold tracking-widest uppercase mb-1">Challenge Starts In</p>
             <h3 id="countdown-timer" class="text-lg font-mono font-black text-emerald-500 italic tracking-tighter">00d : 00h : 00m : 00s</h3>
         </div>
 
+        <!-- User Profile Card -->
         <div class="glass p-4 rounded-2xl border-l-4 border-blue-500 flex justify-between items-center shadow-xl">
             <div class="flex items-center gap-3 overflow-hidden">
                 <div class="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center text-xl font-black text-blue-400 shrink-0" id="user-initial">W</div>
@@ -49,30 +54,68 @@
             </div>
         </div>
 
+        <!-- Leaderboard -->
         <div class="glass p-3 rounded-2xl shadow-lg">
             <h3 class="text-[9px] font-black text-yellow-500 uppercase mb-2 tracking-widest flex items-center gap-1">🏆 Top Warriors</h3>
             <table class="w-full text-left text-[10px] border-collapse"><tbody id="leaderboard-body"></tbody></table>
         </div>
 
-        <h3 class="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-4">📋 Daily Checklist</h3>
+        <!-- Checklist Header -->
+        <div class="flex justify-between items-end mt-4 px-1">
+            <div>
+                <h3 class="text-[9px] font-black text-emerald-500 uppercase tracking-widest">📋 Daily Time-Locked Tasks</h3>
+                <p class="text-[7px] text-gray-500 font-bold uppercase mt-0.5 tracking-tighter">Complete all to earn 100 points daily!</p>
+            </div>
+            <button id="add-rule-btn" class="bg-emerald-600 text-white w-6 h-6 rounded-lg flex items-center justify-center text-lg shadow-lg hover:scale-110 active:scale-95 transition">+</button>
+        </div>
+        
+        <!-- Tasks List -->
         <div id="tasks-container" class="space-y-1"></div>
     </div>
 
-    <!-- AI COACH -->
+    <!-- MODAL: ADD CUSTOM RULE -->
+    <div id="add-modal" class="modal">
+        <div class="glass p-5 rounded-2xl w-full max-w-[280px] space-y-4 shadow-2xl border border-white/10">
+            <h2 class="text-sm font-black text-white uppercase italic tracking-tighter">Add Custom Arc Rule</h2>
+            <div class="space-y-3">
+                <div class="space-y-1">
+                    <label class="text-[8px] text-gray-500 font-bold uppercase ml-1">Task Name</label>
+                    <input type="text" id="rule-text" placeholder="e.g. Cold Shower" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-3 py-2.5 text-[10px] text-white outline-none focus:border-emerald-500 transition">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="space-y-1">
+                        <label class="text-[8px] text-gray-500 font-bold uppercase ml-1">Start Time</label>
+                        <input type="time" id="rule-start" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-2 py-2.5 text-[10px] text-white outline-none focus:border-emerald-500">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[8px] text-gray-500 font-bold uppercase ml-1">End Time</label>
+                        <input type="time" id="rule-end" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-2 py-2.5 text-[10px] text-white outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button id="cancel-add" class="flex-1 py-2.5 text-[9px] font-bold text-gray-400 uppercase tracking-widest">Cancel</button>
+                <button id="save-rule" class="flex-1 py-2.5 bg-emerald-600 rounded-xl text-[9px] font-black uppercase text-white shadow-lg hover:bg-emerald-500 transition">Add Rule</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI COACH WINDOW -->
     <div id="chat-window" class="glass rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-blue-500/20">
         <div class="bg-blue-600/10 p-3 border-b border-white/5 flex justify-between items-center">
-            <span class="font-black italic text-blue-400 text-[10px]">ARC COACH AI</span>
+            <span class="font-black italic text-blue-400 text-[10px] tracking-widest">ARC COACH AI</span>
         </div>
         <div id="chat-messages" class="flex-1 overflow-y-auto p-3 flex flex-col">
             <div class="chat-bubble self-start bg-white/5 text-gray-300">Warrior, focus karo. Kal se tabahi shuru karni hai! ⚡</div>
         </div>
         <div class="p-2 bg-slate-900/50 flex gap-2 border-t border-white/5">
             <input type="text" id="chat-input" placeholder="Type message..." class="flex-1 bg-transparent rounded-lg px-3 py-1.5 text-[10px] focus:outline-none border border-white/5 text-white">
-            <button id="send-btn" class="bg-blue-600 px-3 rounded-lg text-xs">➤</button>
+            <button id="send-btn" class="bg-blue-600 px-3 rounded-lg text-xs hover:bg-blue-500 transition">➤</button>
         </div>
     </div>
 
-    <button id="chat-toggle" class="fixed bottom-6 right-6 bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl z-50 text-xl">🤖</button>
+    <!-- AI Toggle Button -->
+    <button id="chat-toggle" class="fixed bottom-6 right-6 bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl z-50 text-xl hover:scale-110 active:scale-90 transition">🤖</button>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -85,7 +128,7 @@
             projectId: "winter-arc-ba20e",
             storageBucket: "winter-arc-ba20e.appspot.com",
             messagingSenderId: "564956254415",
-            appId: "1:564956254415:web:YOUR_ACTUAL_APP_ID"
+            appId: "1:564956254415:web:YOUR_ACTUAL_APP_ID" // Reminder: Replace with your actual Web App ID
         };
 
         const app = initializeApp(firebaseConfig);
@@ -93,181 +136,325 @@
         const db = getFirestore(app);
 
         let userProfile = null;
-        let rules = [];
-        const CHALLENGE_START_DATE = new Date(2026, 8, 1); // 1 Sept
+        let activeRules = [];
+        const CHALLENGE_START_DATE = new Date(2026, 8, 1); // Sept 1st
 
+        // Auth Listener
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 await syncUser(user);
-                onSnapshot(doc(db, "config", "active_challenge"), (s) => { rules = s.data().rules || []; updateChecklist(); });
+                
+                // Real-time Global Config Listener
+                onSnapshot(doc(db, "config", "active_challenge"), (s) => { 
+                    const globalRules = s.data()?.rules || [];
+                    if (!userProfile?.customRules?.length) {
+                        activeRules = globalRules;
+                        updateChecklist();
+                    }
+                });
+
+                // Real-time User Profile Listener
                 onSnapshot(doc(db, "users", user.uid), (s) => { 
                     userProfile = s.data(); 
-                    document.getElementById('user-points').innerText = userProfile.points;
-                    document.getElementById('user-streak').innerText = userProfile.streak;
-                    document.getElementById('user-name').innerText = userProfile.name;
-                    document.getElementById('user-initial').innerText = userProfile.name.charAt(0).toUpperCase();
+                    if (!userProfile) return;
+                    
+                    document.getElementById('user-points').innerText = userProfile.points || 0;
+                    document.getElementById('user-streak').innerText = (userProfile.streak || 0) + " Days";
+                    document.getElementById('user-name').innerText = userProfile.name || "Warrior";
+                    document.getElementById('user-initial').innerText = (userProfile.name || "W").charAt(0).toUpperCase();
+                    
+                    if (userProfile.customRules && userProfile.customRules.length > 0) {
+                        activeRules = userProfile.customRules;
+                    }
                     updateChecklist(); 
                 });
-                syncRanks();
-            } else { signInWithPopup(auth, new GoogleAuthProvider()); }
+                
+                syncLeaderboard();
+            } else { 
+                signInWithPopup(auth, new GoogleAuthProvider()); 
+            }
         });
 
+        // Initialize user in Firestore if they don't exist
         async function syncUser(user) {
             const ref = doc(db, "users", user.uid);
             const s = await getDoc(ref);
-            if (!s.exists()) await setDoc(ref, { uid: user.uid, name: user.displayName || "Warrior", points: 0, streak: 0, dailyTaskCounts: {}, attendance: {} });
+            if (!s.exists()) {
+                await setDoc(ref, { 
+                    uid: user.uid, 
+                    name: user.displayName || "Warrior", 
+                    points: 0, 
+                    streak: 0, 
+                    dailyTaskCounts: {}, 
+                    attendance: {},
+                    customRules: [],
+                    dailyCompletedRules: {}
+                });
+            }
         }
 
-        // --- STREAK CALCULATION LOGIC ---
+        // Time Utilities
+        function format12Hr(t24) {
+            if (!t24) return "00:00";
+            const [h, m] = t24.split(':');
+            let hr = parseInt(h);
+            const ampm = hr >= 12 ? 'PM' : 'AM';
+            hr = hr % 12 || 12;
+            return `${hr}:${m} ${ampm}`;
+        }
+
         function calculateStreakJS(attendance) {
             let currentStreak = 0;
             const now = new Date();
             if (now < CHALLENGE_START_DATE) return 0;
-            
             const todayNum = now.getDate();
             for (let day = 1; day <= todayNum; day++) {
-                if (attendance[day.toString()] === "present") {
-                    currentStreak++;
-                } else if (day < todayNum) {
-                    currentStreak = 0; // Streak reset if a previous day was missed
-                }
+                if (attendance[day.toString()] === "present") currentStreak++;
+                else if (day < todayNum) currentStreak = 0;
             }
             return currentStreak;
         }
 
-        window.toggleRuleWeb = async (ruleIndex) => {
+        // --- Toggle Rule (Complete Task) ---
+        window.toggleRuleWeb = async (ruleId) => {
             const now = new Date();
             if (now < CHALLENGE_START_DATE) return alert("Challenge starts 1st Sept!");
 
-            const rule = rules[ruleIndex];
+            const rule = activeRules.find(r => r.id === ruleId);
+            if (!rule) return;
+
             const today = now.getDate().toString();
             const currentMins = now.getHours() * 60 + now.getMinutes();
             const [sH, sM] = rule.startTime.split(':').map(Number);
             const [eH, eM] = rule.endTime.split(':').map(Number);
 
-            if (currentMins < (sH*60+sM) || currentMins > (eH*60+eM)) return alert("Not in time!");
+            if (currentMins < (sH*60+sM) || currentMins > (eH*60+eM)) return alert("Rule window is not active!");
 
-            const currentCount = (userProfile?.dailyTaskCounts || {})[today] || 0;
-            if (ruleIndex < currentCount) return alert("Already done!");
-            if (ruleIndex > currentCount) return alert("Follow sequence!");
+            const completedList = userProfile?.dailyCompletedRules?.[today] || [];
+            if (completedList.includes(ruleId)) return;
+
+            const pointsPerRule = Math.floor(100 / activeRules.length);
+            const pointsToAdd = (completedList.length === activeRules.length - 1) ? 
+                               (100 - (pointsPerRule * (activeRules.length - 1))) : pointsPerRule;
 
             const userRef = doc(db, "users", auth.currentUser.uid);
             try {
                 await runTransaction(db, async (t) => {
                     const snap = await t.get(userRef);
                     const data = snap.data();
-                    const latestCount = (data.dailyTaskCounts || {})[today] || 0;
+                    const dailyMap = data.dailyCompletedRules || {};
+                    const todayCompleted = [...(dailyMap[today] || [])];
                     
-                    if (ruleIndex === latestCount) {
-                        const newCount = latestCount + 1;
+                    if (!todayCompleted.includes(ruleId)) {
+                        todayCompleted.push(ruleId);
+                        const newCount = todayCompleted.length;
                         let updates = { 
-                            points: (data.points || 0) + 10,
-                            [`dailyTaskCounts.${today}`]: newCount 
+                            points: (data.points || 0) + pointsToAdd,
+                            [`dailyCompletedRules.${today}`]: todayCompleted,
+                            [`dailyTaskCounts.${today}`]: newCount
                         };
 
-                        // STREAK LOGIC: 5 Tasks = 1 Streak Day
-                        if (newCount === 5) {
-                            const attendance = data.attendance || {};
-                            if (attendance[today] !== "present") {
-                                attendance[today] = "present";
-                                updates.attendance = attendance;
-                                updates.streak = calculateStreakJS(attendance);
+                        if (newCount === activeRules.length || newCount >= 5) {
+                            const att = data.attendance || {};
+                            if (att[today] !== "present") {
+                                att[today] = "present";
+                                updates.attendance = att;
+                                updates.streak = calculateStreakJS(att);
                             }
                         }
                         t.update(userRef, updates);
                     }
                 });
-                alert("Verified! +10 PTS 🔥");
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Toggle Error:", e); }
         };
 
+        // --- Delete Rule with Point Deduction ---
+        window.deleteRuleWeb = async (e, ruleId) => {
+            e.stopPropagation();
+            if (!confirm("Do you want delete arc rule?")) return;
+
+            const today = new Date().getDate().toString();
+            const completedList = userProfile?.dailyCompletedRules?.[today] || [];
+            
+            let pointsToDeduct = 0;
+            if (completedList.includes(ruleId)) {
+                const pointsPerRule = Math.floor(100 / activeRules.length);
+                pointsToDeduct = (completedList.length === activeRules.length) ? 
+                                 (100 - (pointsPerRule * (activeRules.length - 1))) : pointsPerRule;
+            }
+
+            const updatedRules = activeRules.filter(r => r.id !== ruleId);
+            const userRef = doc(db, "users", auth.currentUser.uid);
+
+            try {
+                await runTransaction(db, async (t) => {
+                    const snap = await t.get(userRef);
+                    const data = snap.data();
+                    const dailyMap = data.dailyCompletedRules || {};
+                    const todayCompleted = (dailyMap[today] || []).filter(id => id !== ruleId);
+                    
+                    let updates = {
+                        customRules: updatedRules,
+                        [`dailyCompletedRules.${today}`]: todayCompleted,
+                        [`dailyTaskCounts.${today}`]: todayCompleted.length
+                    };
+
+                    if (pointsToDeduct > 0) {
+                        updates.points = Math.max(0, (data.points || 0) - pointsToDeduct);
+                    }
+                    t.update(userRef, updates);
+                });
+            } catch (err) { console.error("Delete Error:", err); }
+        };
+
+        // --- UI Checklist Rendering ---
         function updateChecklist() {
             const container = document.getElementById('tasks-container');
-            if(!rules.length) return;
+            if (!activeRules.length) {
+                container.innerHTML = '<div class="text-center py-10 opacity-20 font-black italic">NO RULES SET</div>';
+                return;
+            }
             container.innerHTML = '';
             const today = new Date().getDate().toString();
-            const count = (userProfile?.dailyTaskCounts || {})[today] || 0;
+            const completedList = userProfile?.dailyCompletedRules?.[today] || [];
             const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
-            rules.forEach((r, i) => {
+            
+            const pointsPerRule = Math.floor(100 / activeRules.length);
+
+            activeRules.forEach((r, i) => {
                 const [sH, sM] = (r.startTime || "00:00").split(':').map(Number);
                 const [eH, eM] = (r.endTime || "00:00").split(':').map(Number);
-                const isDone = i < count;
+                const isDone = completedList.includes(r.id);
                 const isActive = (new Date() >= CHALLENGE_START_DATE) && (nowMins >= (sH*60+sM) && nowMins <= (eH*60+eM));
-                container.innerHTML += `<div class="task-card glass rounded-xl flex justify-between items-center ${isDone ? 'done' : isActive ? 'active-task' : ''}" onclick="toggleRuleWeb(${i})"><div><div class="font-bold text-gray-100 uppercase text-[10px]">${r.text}</div><div class="text-[8px] text-gray-500 font-mono">${r.startTime} - ${r.endTime}</div></div><div class="text-[9px] font-black opacity-40 uppercase">${isDone ? '✓ DONE' : isActive ? '● LIVE' : 'WAIT'}</div></div>`;
+                const isExpired = nowMins > (eH*60+eM) && !isDone;
+
+                const pts = (i === activeRules.length - 1) ? (100 - (pointsPerRule * (activeRules.length - 1))) : pointsPerRule;
+
+                container.innerHTML += `
+                    <div class="task-card glass rounded-xl flex justify-between items-center ${isDone ? 'done' : isActive ? 'active-task' : isExpired ? 'opacity-30 border-l-red-500' : ''}" 
+                         onclick="${!isDone && isActive ? `toggleRuleWeb(${r.id})` : ''}">
+                        <div class="flex-1">
+                            <div class="font-bold text-gray-100 uppercase text-[10px] tracking-tight">${r.text}</div>
+                            <div class="text-[8px] text-gray-500 font-mono flex items-center gap-2">
+                                <span>${format12Hr(r.startTime)} - ${format12Hr(r.endTime)}</span>
+                                <span class="text-yellow-500/50">• ${pts} PTS</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 shrink-0">
+                            <div class="text-[8px] font-black uppercase tracking-tighter">
+                                ${isDone ? '<span class="text-blue-400">✓ DONE</span>' : 
+                                  isActive ? '<span class="text-emerald-500">● LIVE</span>' : 
+                                  isExpired ? '<span class="text-red-500">✕ MISSED</span>' : 'WAIT'}
+                            </div>
+                            <button onclick="deleteRuleWeb(event, ${r.id})" class="p-1 hover:bg-white/5 rounded transition text-[12px]">🗑️</button>
+                        </div>
+                    </div>`;
             });
         }
 
+        // --- Rule Add Modal Actions ---
+        const modal = document.getElementById('add-modal');
+        document.getElementById('add-rule-btn').onclick = () => modal.classList.add('active');
+        document.getElementById('cancel-add').onclick = () => modal.classList.remove('active');
+        
+        document.getElementById('save-rule').onclick = async () => {
+            const text = document.getElementById('rule-text').value.trim();
+            const start = document.getElementById('rule-start').value;
+            const end = document.getElementById('rule-end').value;
+            
+            if (!text || !start || !end) return alert("Please fill all fields!");
+
+            const newRule = { id: Date.now(), text, startTime: start, endTime: end };
+            const updatedRules = [...activeRules, newRule];
+
+            await updateDoc(doc(db, "users", auth.currentUser.uid), { customRules: updatedRules });
+            
+            modal.classList.remove('active');
+            document.getElementById('rule-text').value = '';
+        };
+
+        // --- Leaderboard Sync ---
+        function syncLeaderboard() {
+            const q = query(collection(db, "users"), orderBy("points", "desc"), limit(10));
+            onSnapshot(q, (snap) => {
+                const b = document.getElementById('leaderboard-body');
+                b.innerHTML = '';
+                let rank = 1;
+                snap.forEach(d => {
+                    const data = d.data();
+                    const isSelf = data.uid === auth.currentUser?.uid;
+                    b.innerHTML += `
+                        <tr class="border-b border-white/5 ${isSelf ? 'bg-blue-500/5' : ''}">
+                            <td class="py-2.5 pr-2 font-bold w-8 text-center ${rank <= 3 ? 'text-yellow-500' : 'text-blue-500/50'}">#${rank}</td>
+                            <td class="py-2.5 font-bold text-gray-200">${data.name || "Warrior"} ${isSelf ? '<span class="text-[7px] bg-blue-500 text-white px-1 rounded ml-1">YOU</span>' : ''}</td>
+                            <td class="py-2.5 text-right font-black text-emerald-500 opacity-60">${data.points || 0} P</td>
+                        </tr>`;
+                    rank++;
+                });
+            });
+        }
+
+        // --- Countdown Timer ---
+        function updateTimer() {
+            const diff = CHALLENGE_START_DATE - new Date();
+            const display = document.getElementById('countdown-timer');
+            if (diff > 0) {
+                const d = Math.floor(diff/86400000); 
+                const h = Math.floor((diff/3600000)%24); 
+                const m = Math.floor((diff/60000)%60); 
+                const s = Math.floor((diff/1000)%60);
+                display.innerText = `${String(d).padStart(2,'0')}d : ${String(h).padStart(2,'0')}h : ${String(m).padStart(2,'0')}m : ${String(s).padStart(2,'0')}s`;
+            } else {
+                display.innerText = "WINTER ARC IS LIVE!";
+                display.classList.add("animate-pulse");
+            }
+        }
+
+        // --- AI COACH LOGIC (PROTECTED) ---
         async function askCoach() {
             const input = document.getElementById('chat-input');
             const msg = input.value.trim();
             if (!msg || !userProfile) return;
-
             appendMsg(msg, true);
             input.value = '';
-
             const loadingId = 'L-' + Date.now();
             appendMsg("...", false, loadingId);
-
             try {
-                const response = await fetch(
-                    'https://winter.gupta07animesh.workers.dev/',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            message: msg,
-                            name: userProfile.name
-                        })
-                    }
-                );
-
+                const response = await fetch('https://winter.gupta07animesh.workers.dev/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg, name: userProfile.name })
+                });
                 const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'AI request failed');
-                }
-
-                document.getElementById(loadingId).innerText = data.reply;
+                document.getElementById(loadingId).innerText = data.reply || "Coach is busy!";
             } catch (error) {
-                console.error(error);
-                document.getElementById(loadingId).innerText =
-                    "ARC Coach abhi response nahi de pa raha.";
+                document.getElementById(loadingId).innerText = "Coach is offline.";
             }
         }
 
         function appendMsg(t, u, id) {
             const d = document.createElement('div');
-            d.className = `chat-bubble ${u ? 'self-end bg-blue-600 text-white' : 'self-start bg-white/10 border border-white/5 text-gray-300'}`;
+            d.className = `chat-bubble ${u ? 'self-end bg-blue-600 text-white shadow-lg' : 'self-start bg-white/10 border border-white/5 text-gray-300'}`;
             if(id) d.id = id; d.innerText = t;
-            const c = document.getElementById('chat-messages'); c.appendChild(d); c.scrollTop = c.scrollHeight;
+            const c = document.getElementById('chat-messages'); 
+            c.appendChild(d); 
+            c.scrollTop = c.scrollHeight;
         }
 
-        function syncRanks() {
-            onSnapshot(query(collection(db, "users"), orderBy("points", "desc"), limit(10)), (snap) => {
-                const b = document.getElementById('leaderboard-body'); b.innerHTML = '';
-                let r = 1; snap.forEach(d => {
-                    b.innerHTML += `<tr class="border-b border-white/5"><td class="py-2 pr-2 text-blue-500 font-bold w-8">#${r}</td><td class="py-2 font-bold text-gray-300 break-words pr-2">${d.data().name}</td><td class="py-2 text-right font-black opacity-40">${d.data().points} P</td></tr>`;
-                    r++;
-                });
-            });
-        }
-
-        function updateTimer() {
-            const diff = CHALLENGE_START_DATE - new Date();
-            if (diff > 0) {
-                const d = Math.floor(diff/86400000); const h = Math.floor((diff/3600000)%24); const m = Math.floor((diff/60000)%60); const s = Math.floor((diff/1000)%60);
-                document.getElementById('countdown-timer').innerText = `${d}d : ${h}h : ${m}m : ${s}s`;
-            } else document.getElementById('countdown-timer').innerText = "WINTER ARC IS LIVE!";
-        }
-
+        // --- Interaction Listeners ---
         document.getElementById('chat-toggle').onclick = () => document.getElementById('chat-window').classList.toggle('active');
         document.getElementById('send-btn').onclick = askCoach;
-        document.getElementById('edit-name-btn').onclick = async () => { const n = prompt("Name:", userProfile.name); if(n) await updateDoc(doc(db, "users", auth.currentUser.uid), { name: n.trim() }); };
-        document.getElementById('logout-btn').onclick = () => signOut(auth);
         document.getElementById('chat-input').onkeydown = (e) => { if(e.key==='Enter') askCoach(); };
-        setInterval(updateTimer, 1000); updateTimer();
+        
+        document.getElementById('edit-name-btn').onclick = async () => { 
+            const n = prompt("Change your Warrior name:", userProfile?.name); 
+            if(n && n.trim()) await updateDoc(doc(db, "users", auth.currentUser.uid), { name: n.trim() }); 
+        };
+        
+        document.getElementById('logout-btn').onclick = () => { if(confirm("Logout?")) signOut(auth); };
+        
+        setInterval(updateTimer, 1000); 
+        updateTimer();
     </script>
 </body>
 </html>
