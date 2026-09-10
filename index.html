@@ -1,2297 +1,911 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Winter Arc Dashboard</title>
+  <title>Winter Arc — Study & Productivity System</title>
 
-    <!-- Google AdSense -->
-    <script async
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6551032201404007"
-        crossorigin="anonymous">
-    </script>
+  <meta
+    name="description"
+    content="Winter Arc is a simple study and productivity system for planning focused tasks, tracking consistency, and reviewing progress without overcomplicating your routine."
+  >
 
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="robots" content="index,follow">
 
-    <style>
-        body {
-            background: #020617;
-            color: #f8fafc;
-            font-family: 'Inter', sans-serif;
-            font-size: 11px;
-            overflow-x: hidden;
-        }
+  <link
+    rel="canonical"
+    href="https://gupta234.github.io/"
+  >
 
-        .glass {
-            background: rgba(30, 41, 59, 0.4);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.05);
-        }
+  <!-- Google AdSense -->
+  <script
+    async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6551032201404007"
+    crossorigin="anonymous">
+  </script>
 
-        .task-card {
-            border-left: 3px solid transparent;
-            transition: 0.2s;
-            margin-bottom: 6px;
-            padding: 10px;
-            cursor: pointer;
-        }
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: #0e1b2d;
+      --text: #eef5ff;
+      --muted: #a9b8cb;
+      --blue: #5aa7ff;
+      --green: #57d59b;
+      --border: #223753;
+      --max: 1040px;
+    }
 
-        .task-card:active {
-            transform: scale(0.98);
-        }
+    * {
+      box-sizing: border-box;
+    }
 
-        .done {
-            border-left-color: #3b82f6;
-            background: rgba(59, 130, 246, 0.1);
-            opacity: 0.8;
-        }
+    html {
+      scroll-behavior: smooth;
+    }
 
-        .active-task {
-            border-left-color: #22c55e;
-            background: rgba(34, 197, 94, 0.1);
-        }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(
+          180deg,
+          #07111f,
+          #091728 45%,
+          #07111f
+        );
+      color: var(--text);
+      line-height: 1.65;
+    }
 
-        #chat-window {
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            width: 280px;
-            height: 380px;
-            z-index: 100;
-            transition: 0.3s;
-            transform: translateY(20px);
-            opacity: 0;
-            pointer-events: none;
-        }
+    a {
+      color: inherit;
+    }
 
-        #chat-window.active {
-            transform: translateY(0);
-            opacity: 1;
-            pointer-events: all;
-        }
+    .wrap {
+      width: min(
+        var(--max),
+        calc(100% - 32px)
+      );
+      margin: auto;
+    }
 
-        .chat-bubble {
-            padding: 8px 12px;
-            border-radius: 12px;
-            max-width: 85%;
-            margin-bottom: 8px;
-            font-size: 10px;
-            line-height: 1.4;
-        }
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(7, 17, 31, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
 
-        ::-webkit-scrollbar {
-            width: 3px;
-        }
+    .navin {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
 
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.1);
-        }
+    .brand {
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-decoration: none;
+    }
 
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.85);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-            padding: 20px;
-        }
+    .links {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
 
-        .modal.active {
-            display: flex;
-        }
-    </style>
+    .links a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 10px 15px;
+      border-radius: 10px;
+      background: var(--blue);
+      color: #041120 !important;
+      font-weight: 800;
+      text-decoration: none !important;
+    }
+
+    .hero {
+      padding: 86px 0 56px;
+    }
+
+    .eyebrow {
+      color: var(--green);
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    .hero h1 {
+      font-size: clamp(38px, 7vw, 68px);
+      line-height: 1.03;
+      margin: 12px 0 18px;
+      max-width: 850px;
+    }
+
+    .lead {
+      font-size: 19px;
+      color: var(--muted);
+      max-width: 760px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 28px;
+    }
+
+    .ghost {
+      background: transparent !important;
+      color: var(--text) !important;
+      border: 1px solid var(--border);
+    }
+
+    section {
+      padding: 56px 0;
+    }
+
+    h2 {
+      font-size: clamp(28px, 4vw, 42px);
+      margin: 0 0 14px;
+    }
+
+    .intro {
+      max-width: 800px;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns:
+        repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      background:
+        linear-gradient(
+          180deg,
+          var(--panel),
+          #0a1728
+        );
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+    }
+
+    .card h3 {
+      margin-top: 0;
+    }
+
+    .card p {
+      color: var(--muted);
+    }
+
+    .article {
+      max-width: 850px;
+    }
+
+    .article h3 {
+      margin-top: 32px;
+      font-size: 22px;
+    }
+
+    .article p,
+    .article li {
+      color: var(--muted);
+    }
+
+    .steps {
+      counter-reset: step;
+      display: grid;
+      gap: 14px;
+      margin-top: 30px;
+    }
+
+    .step {
+      counter-increment: step;
+      padding: 20px 22px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    .step::before {
+      content: counter(step);
+      display: inline-grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #041120;
+      font-weight: 900;
+      margin-right: 12px;
+    }
+
+    .faq {
+      display: grid;
+      gap: 12px;
+    }
+
+    .faq details {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+
+    .faq summary {
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .faq p {
+      color: var(--muted);
+    }
+
+    footer {
+      border-top:
+        1px solid var(--border);
+      margin-top: 40px;
+      padding: 34px 0 48px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .foot {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .foot a {
+      color: var(--muted);
+      margin-right: 14px;
+    }
+
+    @media (max-width: 760px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .links a:not(.btn) {
+        display: none;
+      }
+
+      .hero {
+        padding-top: 60px;
+      }
+
+      .card {
+        padding: 20px;
+      }
+    }
+  </style>
 </head>
 
-<body class="p-4 flex flex-col items-center">
+<body>
 
-    <div class="w-full max-w-md space-y-4 pb-20">
+  <header class="nav">
+    <div class="wrap navin">
 
-        <div class="flex justify-between items-center">
-            <h1 class="text-base font-black italic text-blue-500 uppercase tracking-tighter">
-                Winter Arc
-            </h1>
+      <a
+        class="brand"
+        href="#top">
+        WINTER ARC
+      </a>
 
-            <button
-                id="logout-btn"
-                class="text-[8px] text-red-500 opacity-40 uppercase font-bold">
-                Logout
-            </button>
+      <nav
+        class="links"
+        aria-label="Main navigation">
+
+        <a href="#about">
+          About
+        </a>
+
+        <a href="#features">
+          Features
+        </a>
+
+        <a href="#guide">
+          Guide
+        </a>
+
+        <a href="#faq">
+          FAQ
+        </a>
+
+        <a
+          class="btn"
+          href="app.html">
+          Open App
+        </a>
+
+      </nav>
+    </div>
+  </header>
+
+
+  <main id="top">
+
+    <section class="hero">
+      <div class="wrap">
+
+        <div class="eyebrow">
+          A focused productivity project
         </div>
 
+        <h1>
+          Build a study routine
+          you can actually follow.
+        </h1>
 
-        <!-- Timer Section -->
+        <p class="lead">
+          Winter Arc is a lightweight
+          system for turning a vague goal
+          like “study more” into a small
+          set of timed tasks, visible
+          progress, and a routine you can
+          review each day.
 
-        <div class="bg-emerald-600/10 border border-emerald-500/30 p-4 rounded-2xl text-center shadow-lg">
+          The aim is simple: reduce
+          decision fatigue and make
+          consistency easier to measure.
+        </p>
 
-            <p class="text-gray-400 text-[9px] font-bold tracking-widest uppercase mb-1">
-                Challenge Starts In
+        <div class="actions">
+
+          <a
+            class="btn"
+            href="app.html">
+            Open Winter Arc
+          </a>
+
+          <a
+            class="btn ghost"
+            href="#guide">
+            Read the Study Guide
+          </a>
+
+        </div>
+      </div>
+    </section>
+
+
+    <section id="about">
+      <div class="wrap">
+
+        <h2>
+          What Winter Arc is
+        </h2>
+
+        <p class="intro">
+          Winter Arc is an independent
+          study and productivity project.
+
+          It combines a daily task list,
+          time windows, points, streak
+          tracking and an optional AI
+          coach in one simple dashboard.
+
+          It is not a replacement for a
+          teacher or textbook. Its job is
+          narrower: help you decide what
+          you will do today and make it
+          obvious whether you actually
+          did it.
+        </p>
+
+        <div class="grid">
+
+          <article class="card">
+            <h3>
+              Time-locked tasks
+            </h3>
+
+            <p>
+              Give each important task a
+              start and end window. A time
+              window is more concrete than
+              an all-day to-do item and
+              makes it easier to notice
+              when a plan is unrealistic.
+            </p>
+          </article>
+
+
+          <article class="card">
+            <h3>
+              Progress you can see
+            </h3>
+
+            <p>
+              Completed tasks add to your
+              daily progress.
+
+              Streaks and points are
+              feedback, not the goal; the
+              real goal is repeated useful
+              work.
+            </p>
+          </article>
+
+
+          <article class="card">
+            <h3>
+              Simple review loop
+            </h3>
+
+            <p>
+              At the end of the day,
+              compare the plan with what
+              happened.
+
+              Keep tasks that worked,
+              shorten tasks that were too
+              large, and remove tasks that
+              add noise.
+            </p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+
+    <section id="features">
+      <div class="wrap">
+
+        <h2>
+          Core features
+        </h2>
+
+        <p class="intro">
+          The dashboard is deliberately
+          small.
+
+          A productivity tool becomes a
+          distraction when managing the
+          tool takes more effort than
+          doing the work.
+        </p>
+
+
+        <div class="grid">
+
+          <article class="card">
+
+            <h3>
+              Daily Rules
+            </h3>
+
+            <p>
+              Create focused tasks such
+              as revision, question
+              practice, reading or a
+              recap session.
+
+              Each task can have its own
+              time window.
             </p>
 
-            <h3
-                id="countdown-timer"
-                class="text-lg font-mono font-black text-emerald-500 italic tracking-tighter">
-
-                00d : 00h : 00m : 00s
-
-            </h3>
-        </div>
+          </article>
 
 
-        <!-- User Profile Card -->
+          <article class="card">
 
-        <div class="glass p-4 rounded-2xl border-l-4 border-blue-500 flex justify-between items-center shadow-xl">
-
-            <div class="flex items-center gap-3 overflow-hidden">
-
-                <div
-                    class="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center text-xl font-black text-blue-400 shrink-0"
-                    id="user-initial">
-
-                    W
-
-                </div>
-
-                <div class="flex-1 overflow-hidden">
-
-                    <div class="flex items-center gap-2">
-
-                        <span
-                            id="user-name"
-                            class="font-bold text-sm text-white whitespace-nowrap">
-
-                            Warrior
-
-                        </span>
-
-                        <button
-                            id="edit-name-btn"
-                            class="text-[7px] text-blue-400 border border-blue-400/20 px-1 rounded">
-
-                            Edit
-
-                        </button>
-
-                    </div>
-
-                    <div class="text-[9px] text-yellow-500 font-black tracking-widest">
-
-                        <span id="user-points">0</span> PTS
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="text-right ml-2 shrink-0">
-
-                <div class="text-[7px] text-gray-500 font-black uppercase">
-                    Streak 🔥
-                </div>
-
-                <div
-                    id="user-streak"
-                    class="text-base font-black text-orange-500">
-
-                    0 Days
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- Leaderboard -->
-
-        <div class="glass p-3 rounded-2xl shadow-lg">
-
-            <h3 class="text-[9px] font-black text-yellow-500 uppercase mb-2 tracking-widest flex items-center gap-1">
-
-                🏆 Top Warriors
-
+            <h3>
+              Streaks & Points
             </h3>
 
-            <table class="w-full text-left text-[10px] border-collapse">
+            <p>
+              Use a visible score to
+              notice consistency over
+              time.
 
-                <tbody id="leaderboard-body"></tbody>
+              Missing one day is data;
+              it is not a reason to throw
+              away the entire routine.
+            </p>
 
-            </table>
+          </article>
+
+
+          <article class="card">
+
+            <h3>
+              Leaderboard
+            </h3>
+
+            <p>
+              A lightweight leaderboard
+              can make progress visible
+              among users.
+
+              It should be treated as
+              optional motivation rather
+              than a measure of
+              intelligence or worth.
+            </p>
+
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+
+    <section id="guide">
+
+      <div class="wrap article">
+
+        <h2>
+          A practical guide to building
+          a study system
+        </h2>
+
+        <p class="intro">
+          A useful plan is specific
+          enough to start without
+          thinking, but flexible enough
+          to survive a normal day.
+
+          The method below is the
+          approach Winter Arc is designed
+          around.
+        </p>
+
+
+        <h3>
+          1. Start with outputs,
+          not hours
+        </h3>
+
+        <p>
+          “Study chemistry for three
+          hours” sounds precise, but it
+          does not define what should be
+          finished.
+
+          A better task describes an
+          output: revise one concept,
+          solve a defined set of
+          questions, check mistakes, or
+          create a short recall sheet.
+
+          Hours matter, but completed
+          learning actions are easier to
+          review.
+        </p>
+
+
+        <h3>
+          2. Keep the daily list short
+        </h3>
+
+        <p>
+          A huge list feels productive
+          when you write it and terrible
+          when you fail to finish it.
+
+          Pick a few high-value tasks.
+
+          If everything is marked
+          important, the list has stopped
+          helping you prioritize.
+
+          A realistic plan should leave
+          room for school, coaching,
+          meals, travel, breaks and
+          unexpected delays.
+        </p>
+
+
+        <h3>
+          3. Use time windows instead of
+          perfect schedules
+        </h3>
+
+        <p>
+          A minute-by-minute timetable
+          breaks as soon as one activity
+          runs late.
+
+          A time window is more forgiving.
+
+          For example, you might reserve
+          an evening block for question
+          practice without pretending you
+          know the exact minute every
+          question will take.
+
+          The window creates a boundary
+          while leaving enough flexibility
+          to work naturally.
+        </p>
+
+
+        <h3>
+          4. Separate learning from
+          testing
+        </h3>
+
+        <p>
+          Reading and watching
+          explanations can build
+          understanding, but they can
+          also create an illusion of
+          progress.
+
+          Add a second task that forces
+          retrieval: closed-book recall,
+          practice questions, flashcards,
+          diagrams from memory, or
+          explaining the concept in your
+          own words.
+
+          If you cannot retrieve an idea
+          without looking at the source,
+          it probably needs another pass.
+        </p>
+
+
+        <h3>
+          5. Review mistakes,
+          not only scores
+        </h3>
+
+        <p>
+          After practice, classify
+          mistakes.
+
+          Was the concept missing?
+          Was the formula forgotten?
+          Did you misread the question?
+          Was the calculation careless?
+
+          Different errors need different
+          fixes.
+
+          Re-reading an entire chapter is
+          inefficient if the real problem
+          is a repeated calculation
+          mistake.
+        </p>
+
+
+        <h3>
+          6. Adjust the system weekly
+        </h3>
+
+        <p>
+          Your first routine will not be
+          perfect.
+
+          Once a week, look for patterns:
+          tasks that are always skipped,
+          time windows that are
+          consistently too small, and
+          topics that repeatedly produce
+          errors.
+
+          Change the routine based on
+          evidence instead of adding more
+          rules.
+        </p>
+
+
+        <div class="steps">
+
+          <div class="step">
+            <strong>
+              Choose 3–5 important tasks.
+            </strong>
+
+            Write them as concrete actions
+            that can actually be finished.
+          </div>
+
+
+          <div class="step">
+            <strong>
+              Assign realistic time
+              windows.
+            </strong>
+
+            Leave buffer time between
+            demanding study sessions.
+          </div>
+
+
+          <div class="step">
+            <strong>
+              Do the work before
+              optimizing the system.
+            </strong>
+
+            The dashboard should support
+            studying, not replace it.
+          </div>
+
+
+          <div class="step">
+            <strong>
+              Review at the end of
+              the day.
+            </strong>
+
+            Keep what worked and edit
+            what did not.
+          </div>
 
         </div>
 
+      </div>
+    </section>
 
-        <!-- Checklist Header -->
 
-        <div class="flex justify-between items-end mt-4 px-1">
+    <section id="faq">
+      <div class="wrap">
 
-            <div>
+        <h2>
+          Frequently Asked Questions
+        </h2>
 
-                <h3 class="text-[9px] font-black text-emerald-500 uppercase tracking-widest">
+        <div class="faq">
 
-                    📋 Daily Time-Locked Tasks
+          <details>
+            <summary>
+              Do I need an account to
+              read this website?
+            </summary>
 
-                </h3>
+            <p>
+              No. The information pages
+              are public.
 
-                <p class="text-[7px] text-gray-500 font-bold uppercase mt-0.5 tracking-tighter">
+              The interactive dashboard
+              may ask you to sign in
+              because it stores
+              user-specific progress.
+            </p>
+          </details>
 
-                    Complete all to earn 100 points daily!
 
-                </p>
+          <details>
+            <summary>
+              Does a longer streak always
+              mean better studying?
+            </summary>
 
-            </div>
+            <p>
+              No.
 
-            <button
-                id="add-rule-btn"
-                class="bg-emerald-600 text-white w-6 h-6 rounded-lg flex items-center justify-center text-lg shadow-lg hover:scale-110 active:scale-95 transition">
+              A streak only measures
+              repeated completion of the
+              tasks you selected.
 
-                +
+              The quality of those tasks
+              matters more than the number
+              beside the streak.
+            </p>
+          </details>
 
-            </button>
+
+          <details>
+            <summary>
+              Should I create a task for
+              every small activity?
+            </summary>
+
+            <p>
+              Usually not.
+
+              Track the activities that
+              meaningfully affect your
+              goal.
+
+              Too many tiny tasks increase
+              management overhead and
+              make the system harder to
+              use.
+            </p>
+          </details>
+
+
+          <details>
+            <summary>
+              Can I use Winter Arc as my
+              only study resource?
+            </summary>
+
+            <p>
+              No.
+
+              Use appropriate textbooks,
+              class material, teachers
+              and reliable learning
+              resources for subject
+              knowledge.
+
+              Winter Arc is a planning
+              and consistency tool.
+            </p>
+          </details>
+
+
+          <details>
+            <summary>
+              Why does the dashboard use
+              sign-in?
+            </summary>
+
+            <p>
+              Sign-in allows the app to
+              associate progress such as
+              tasks, points and streaks
+              with the correct user.
+
+              Read the privacy policy
+              before using the
+              interactive dashboard.
+            </p>
+          </details>
 
         </div>
+      </div>
+    </section>
+
+  </main>
 
 
-        <!-- Tasks List -->
+  <footer>
 
-        <div
-            id="tasks-container"
-            class="space-y-1">
-        </div>
+    <div class="wrap foot">
+
+      <div>
+        © 2026 Winter Arc.
+        Independent productivity project.
+      </div>
+
+      <div>
+
+        <a href="privacy.html">
+          Privacy Policy
+        </a>
+
+        <a href="terms.html">
+          Terms
+        </a>
+
+        <a
+          href="https://github.com/gupta234/gupta234.github.io">
+          Project Repository
+        </a>
+
+      </div>
 
     </div>
 
-
-
-    <!-- ADD CUSTOM RULE MODAL -->
-
-    <div
-        id="add-modal"
-        class="modal">
-
-        <div class="glass p-5 rounded-2xl w-full max-w-[280px] space-y-4 shadow-2xl border border-white/10">
-
-            <h2 class="text-sm font-black text-white uppercase italic tracking-tighter">
-
-                Add Custom Arc Rule
-
-            </h2>
-
-
-            <div class="space-y-3">
-
-                <div class="space-y-1">
-
-                    <label class="text-[8px] text-gray-500 font-bold uppercase ml-1">
-
-                        Task Name
-
-                    </label>
-
-                    <input
-                        type="text"
-                        id="rule-text"
-                        placeholder="e.g. Cold Shower"
-                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-3 py-2.5 text-[10px] text-white outline-none focus:border-emerald-500 transition">
-
-                </div>
-
-
-                <div class="grid grid-cols-2 gap-2">
-
-                    <div class="space-y-1">
-
-                        <label class="text-[8px] text-gray-500 font-bold uppercase ml-1">
-
-                            Start Time
-
-                        </label>
-
-                        <input
-                            type="time"
-                            id="rule-start"
-                            class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-2 py-2.5 text-[10px] text-white outline-none focus:border-emerald-500">
-
-                    </div>
-
-
-                    <div class="space-y-1">
-
-                        <label class="text-[8px] text-gray-500 font-bold uppercase ml-1">
-
-                            End Time
-
-                        </label>
-
-                        <input
-                            type="time"
-                            id="rule-end"
-                            class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-2 py-2.5 text-[10px] text-white outline-none focus:border-emerald-500">
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="flex gap-2 pt-2">
-
-                <button
-                    id="cancel-add"
-                    class="flex-1 py-2.5 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-
-                    Cancel
-
-                </button>
-
-                <button
-                    id="save-rule"
-                    class="flex-1 py-2.5 bg-emerald-600 rounded-xl text-[9px] font-black uppercase text-white shadow-lg hover:bg-emerald-500 transition">
-
-                    Add Rule
-
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- AI COACH WINDOW -->
-
-    <div
-        id="chat-window"
-        class="glass rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-blue-500/20">
-
-        <div class="bg-blue-600/10 p-3 border-b border-white/5 flex justify-between items-center">
-
-            <span class="font-black italic text-blue-400 text-[10px] tracking-widest">
-
-                ARC COACH AI
-
-            </span>
-
-        </div>
-
-
-        <div
-            id="chat-messages"
-            class="flex-1 overflow-y-auto p-3 flex flex-col">
-
-            <div class="chat-bubble self-start bg-white/5 text-gray-300">
-
-                Warrior, focus karo. Kal se tabahi shuru karni hai! ⚡
-
-            </div>
-
-        </div>
-
-
-        <div class="p-2 bg-slate-900/50 flex gap-2 border-t border-white/5">
-
-            <input
-                type="text"
-                id="chat-input"
-                placeholder="Type message..."
-                class="flex-1 bg-transparent rounded-lg px-3 py-1.5 text-[10px] focus:outline-none border border-white/5 text-white">
-
-            <button
-                id="send-btn"
-                class="bg-blue-600 px-3 rounded-lg text-xs hover:bg-blue-500 transition">
-
-                ➤
-
-            </button>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- AI Toggle Button -->
-
-    <button
-        id="chat-toggle"
-        class="fixed bottom-6 right-6 bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl z-50 text-xl hover:scale-110 active:scale-90 transition">
-
-        🤖
-
-    </button>
-
-
-
-    <script type="module">
-
-        import {
-            initializeApp
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-
-
-        import {
-            getAuth,
-            GoogleAuthProvider,
-            signInWithPopup,
-            onAuthStateChanged,
-            signOut
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-
-        import {
-            getFirestore,
-            doc,
-            onSnapshot,
-            collection,
-            query,
-            orderBy,
-            limit,
-            getDoc,
-            setDoc,
-            updateDoc,
-            runTransaction
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-
-
-        const firebaseConfig = {
-
-            apiKey:
-                "AIzaSyCZqTzcU4kK5nkEkB1UcBQlMA-lOv0EPl0",
-
-            authDomain:
-                "winter-arc-ba20e.firebaseapp.com",
-
-            projectId:
-                "winter-arc-ba20e",
-
-            storageBucket:
-                "winter-arc-ba20e.appspot.com",
-
-            messagingSenderId:
-                "564956254415",
-
-            appId:
-                "1:564956254415:web:YOUR_ACTUAL_APP_ID"
-
-        };
-
-
-
-        const app = initializeApp(firebaseConfig);
-
-        const auth = getAuth(app);
-
-        const db = getFirestore(app);
-
-
-
-        let userProfile = null;
-
-        let activeRules = [];
-
-
-        const CHALLENGE_START_DATE =
-            new Date(2026, 8, 1);
-
-
-
-        // ==========================
-        // AUTH LISTENER
-        // ==========================
-
-        onAuthStateChanged(
-            auth,
-            async (user) => {
-
-                if (user) {
-
-                    await syncUser(user);
-
-
-
-                    // Global Rules
-
-                    onSnapshot(
-                        doc(
-                            db,
-                            "config",
-                            "active_challenge"
-                        ),
-
-                        (s) => {
-
-                            const globalRules =
-                                s.data()?.rules || [];
-
-
-                            if (
-                                !userProfile
-                                    ?.customRules
-                                    ?.length
-                            ) {
-
-                                activeRules =
-                                    globalRules;
-
-                                updateChecklist();
-
-                            }
-
-                        }
-                    );
-
-
-
-                    // User Profile
-
-                    onSnapshot(
-
-                        doc(
-                            db,
-                            "users",
-                            user.uid
-                        ),
-
-                        (s) => {
-
-                            userProfile =
-                                s.data();
-
-
-                            if (!userProfile)
-                                return;
-
-
-                            document
-                                .getElementById(
-                                    "user-points"
-                                )
-                                .innerText =
-                                userProfile.points || 0;
-
-
-                            document
-                                .getElementById(
-                                    "user-streak"
-                                )
-                                .innerText =
-                                (
-                                    userProfile.streak || 0
-                                )
-                                + " Days";
-
-
-                            document
-                                .getElementById(
-                                    "user-name"
-                                )
-                                .innerText =
-                                userProfile.name
-                                || "Warrior";
-
-
-                            document
-                                .getElementById(
-                                    "user-initial"
-                                )
-                                .innerText =
-                                (
-                                    userProfile.name
-                                    || "W"
-                                )
-                                .charAt(0)
-                                .toUpperCase();
-
-
-
-                            if (
-                                userProfile.customRules
-                                &&
-                                userProfile.customRules
-                                    .length > 0
-                            ) {
-
-                                activeRules =
-                                    userProfile
-                                        .customRules;
-
-                            }
-
-
-                            updateChecklist();
-
-                        }
-
-                    );
-
-
-                    syncLeaderboard();
-
-                }
-
-                else {
-
-                    signInWithPopup(
-                        auth,
-                        new GoogleAuthProvider()
-                    );
-
-                }
-
-            }
-        );
-
-
-
-        // ==========================
-        // CREATE USER
-        // ==========================
-
-        async function syncUser(user) {
-
-            const ref =
-                doc(
-                    db,
-                    "users",
-                    user.uid
-                );
-
-
-            const s =
-                await getDoc(ref);
-
-
-            if (!s.exists()) {
-
-                await setDoc(
-                    ref,
-                    {
-
-                        uid:
-                            user.uid,
-
-                        name:
-                            user.displayName
-                            || "Warrior",
-
-                        points:
-                            0,
-
-                        streak:
-                            0,
-
-                        dailyTaskCounts:
-                            {},
-
-                        attendance:
-                            {},
-
-                        customRules:
-                            [],
-
-                        dailyCompletedRules:
-                            {}
-
-                    }
-                );
-
-            }
-
-        }
-
-
-
-        // ==========================
-        // TIME FORMAT
-        // ==========================
-
-        function format12Hr(t24) {
-
-            if (!t24)
-                return "00:00";
-
-
-            const [h, m] =
-                t24.split(":");
-
-
-            let hr =
-                parseInt(h);
-
-
-            const ampm =
-                hr >= 12
-                    ? "PM"
-                    : "AM";
-
-
-            hr =
-                hr % 12 || 12;
-
-
-            return `${hr}:${m} ${ampm}`;
-
-        }
-
-
-
-        // ==========================
-        // STREAK CALCULATION
-        // ==========================
-
-        function calculateStreakJS(
-            attendance
-        ) {
-
-            let currentStreak = 0;
-
-            const now =
-                new Date();
-
-
-            if (
-                now
-                <
-                CHALLENGE_START_DATE
-            )
-                return 0;
-
-
-            const todayNum =
-                now.getDate();
-
-
-            for (
-                let day = 1;
-                day <= todayNum;
-                day++
-            ) {
-
-                if (
-                    attendance[
-                        day.toString()
-                    ]
-                    ===
-                    "present"
-                ) {
-
-                    currentStreak++;
-
-                }
-
-                else if (
-                    day < todayNum
-                ) {
-
-                    currentStreak = 0;
-
-                }
-
-            }
-
-
-            return currentStreak;
-
-        }
-
-
-
-        // ==========================
-        // COMPLETE RULE
-        // ==========================
-
-        window.toggleRuleWeb =
-            async (ruleId) => {
-
-                const now =
-                    new Date();
-
-
-                if (
-                    now
-                    <
-                    CHALLENGE_START_DATE
-                ) {
-
-                    return alert(
-                        "Challenge starts 1st Sept!"
-                    );
-
-                }
-
-
-                const rule =
-                    activeRules.find(
-                        r =>
-                            r.id === ruleId
-                    );
-
-
-                if (!rule)
-                    return;
-
-
-
-                const today =
-                    now
-                        .getDate()
-                        .toString();
-
-
-                const currentMins =
-                    now.getHours() * 60
-                    +
-                    now.getMinutes();
-
-
-                const [sH, sM] =
-                    rule
-                        .startTime
-                        .split(":")
-                        .map(Number);
-
-
-                const [eH, eM] =
-                    rule
-                        .endTime
-                        .split(":")
-                        .map(Number);
-
-
-
-                if (
-                    currentMins
-                    <
-                    (sH * 60 + sM)
-                    ||
-                    currentMins
-                    >
-                    (eH * 60 + eM)
-                ) {
-
-                    return alert(
-                        "Rule window is not active!"
-                    );
-
-                }
-
-
-
-                const completedList =
-                    userProfile
-                        ?.dailyCompletedRules
-                        ?.[today]
-                    || [];
-
-
-                if (
-                    completedList
-                        .includes(ruleId)
-                )
-                    return;
-
-
-
-                const pointsPerRule =
-                    Math.floor(
-                        100
-                        /
-                        activeRules.length
-                    );
-
-
-                const pointsToAdd =
-
-                    completedList.length
-                    ===
-                    activeRules.length - 1
-
-                    ?
-
-                    (
-                        100
-                        -
-                        (
-                            pointsPerRule
-                            *
-                            (
-                                activeRules.length
-                                - 1
-                            )
-                        )
-                    )
-
-                    :
-
-                    pointsPerRule;
-
-
-
-                const userRef =
-                    doc(
-                        db,
-                        "users",
-                        auth.currentUser.uid
-                    );
-
-
-
-                try {
-
-                    await runTransaction(
-                        db,
-                        async (t) => {
-
-
-                            const snap =
-                                await t.get(
-                                    userRef
-                                );
-
-
-                            const data =
-                                snap.data();
-
-
-                            const dailyMap =
-                                data
-                                    .dailyCompletedRules
-                                || {};
-
-
-                            const todayCompleted =
-                                [
-                                    ...(
-                                        dailyMap[today]
-                                        || []
-                                    )
-                                ];
-
-
-
-                            if (
-                                !todayCompleted
-                                    .includes(ruleId)
-                            ) {
-
-
-                                todayCompleted.push(
-                                    ruleId
-                                );
-
-
-                                const newCount =
-                                    todayCompleted.length;
-
-
-
-                                let updates = {
-
-                                    points:
-                                        (
-                                            data.points
-                                            || 0
-                                        )
-                                        +
-                                        pointsToAdd,
-
-
-                                    [
-                                        `dailyCompletedRules.${today}`
-                                    ]:
-                                        todayCompleted,
-
-
-                                    [
-                                        `dailyTaskCounts.${today}`
-                                    ]:
-                                        newCount
-
-                                };
-
-
-
-                                if (
-                                    newCount
-                                    ===
-                                    activeRules.length
-
-                                    ||
-
-                                    newCount
-                                    >= 5
-                                ) {
-
-
-                                    const att =
-                                        data.attendance
-                                        || {};
-
-
-                                    if (
-                                        att[today]
-                                        !==
-                                        "present"
-                                    ) {
-
-
-                                        att[today] =
-                                            "present";
-
-
-                                        updates.attendance =
-                                            att;
-
-
-                                        updates.streak =
-                                            calculateStreakJS(
-                                                att
-                                            );
-
-                                    }
-
-                                }
-
-
-
-                                t.update(
-                                    userRef,
-                                    updates
-                                );
-
-                            }
-
-                        }
-
-                    );
-
-                }
-
-                catch (e) {
-
-                    console.error(
-                        "Toggle Error:",
-                        e
-                    );
-
-                }
-
-            };
-
-
-
-        // ==========================
-        // DELETE RULE
-        // ==========================
-
-        window.deleteRuleWeb =
-            async (
-                e,
-                ruleId
-            ) => {
-
-
-                e.stopPropagation();
-
-
-                if (
-                    !confirm(
-                        "Do you want delete arc rule?"
-                    )
-                )
-                    return;
-
-
-
-                const today =
-                    new Date()
-                        .getDate()
-                        .toString();
-
-
-                const completedList =
-                    userProfile
-                        ?.dailyCompletedRules
-                        ?.[today]
-                    || [];
-
-
-
-                let pointsToDeduct =
-                    0;
-
-
-
-                if (
-                    completedList
-                        .includes(ruleId)
-                ) {
-
-
-                    const pointsPerRule =
-                        Math.floor(
-                            100
-                            /
-                            activeRules.length
-                        );
-
-
-                    pointsToDeduct =
-
-                        completedList.length
-                        ===
-                        activeRules.length
-
-                        ?
-
-                        (
-                            100
-                            -
-                            (
-                                pointsPerRule
-                                *
-                                (
-                                    activeRules.length
-                                    - 1
-                                )
-                            )
-                        )
-
-                        :
-
-                        pointsPerRule;
-
-                }
-
-
-
-                const updatedRules =
-                    activeRules.filter(
-                        r =>
-                            r.id !== ruleId
-                    );
-
-
-                const userRef =
-                    doc(
-                        db,
-                        "users",
-                        auth.currentUser.uid
-                    );
-
-
-
-                try {
-
-                    await runTransaction(
-                        db,
-                        async (t) => {
-
-
-                            const snap =
-                                await t.get(
-                                    userRef
-                                );
-
-
-                            const data =
-                                snap.data();
-
-
-                            const dailyMap =
-                                data
-                                    .dailyCompletedRules
-                                || {};
-
-
-                            const todayCompleted =
-                                (
-                                    dailyMap[today]
-                                    || []
-                                )
-                                .filter(
-                                    id =>
-                                        id !== ruleId
-                                );
-
-
-
-                            let updates = {
-
-                                customRules:
-                                    updatedRules,
-
-
-                                [
-                                    `dailyCompletedRules.${today}`
-                                ]:
-                                    todayCompleted,
-
-
-                                [
-                                    `dailyTaskCounts.${today}`
-                                ]:
-                                    todayCompleted.length
-
-                            };
-
-
-
-                            if (
-                                pointsToDeduct > 0
-                            ) {
-
-                                updates.points =
-                                    Math.max(
-
-                                        0,
-
-                                        (
-                                            data.points
-                                            || 0
-                                        )
-                                        -
-                                        pointsToDeduct
-
-                                    );
-
-                            }
-
-
-
-                            t.update(
-                                userRef,
-                                updates
-                            );
-
-                        }
-                    );
-
-                }
-
-                catch (err) {
-
-                    console.error(
-                        "Delete Error:",
-                        err
-                    );
-
-                }
-
-            };
-
-
-
-        // ==========================
-        // CHECKLIST UI
-        // ==========================
-
-        function updateChecklist() {
-
-            const container =
-                document.getElementById(
-                    "tasks-container"
-                );
-
-
-            if (
-                !activeRules.length
-            ) {
-
-                container.innerHTML =
-                    '<div class="text-center py-10 opacity-20 font-black italic">NO RULES SET</div>';
-
-                return;
-
-            }
-
-
-
-            container.innerHTML =
-                "";
-
-
-            const today =
-                new Date()
-                    .getDate()
-                    .toString();
-
-
-            const completedList =
-                userProfile
-                    ?.dailyCompletedRules
-                    ?.[today]
-                || [];
-
-
-            const nowMins =
-                new Date()
-                    .getHours()
-                * 60
-
-                +
-
-                new Date()
-                    .getMinutes();
-
-
-
-            const pointsPerRule =
-                Math.floor(
-                    100
-                    /
-                    activeRules.length
-                );
-
-
-
-            activeRules.forEach(
-                (
-                    r,
-                    i
-                ) => {
-
-
-                    const [sH, sM] =
-                        (
-                            r.startTime
-                            || "00:00"
-                        )
-                        .split(":")
-                        .map(Number);
-
-
-                    const [eH, eM] =
-                        (
-                            r.endTime
-                            || "00:00"
-                        )
-                        .split(":")
-                        .map(Number);
-
-
-
-                    const isDone =
-                        completedList
-                            .includes(
-                                r.id
-                            );
-
-
-
-                    const isActive =
-
-                        (
-                            new Date()
-                            >=
-                            CHALLENGE_START_DATE
-                        )
-
-                        &&
-
-                        (
-                            nowMins
-                            >=
-                            (
-                                sH * 60
-                                + sM
-                            )
-                        )
-
-                        &&
-
-                        (
-                            nowMins
-                            <=
-                            (
-                                eH * 60
-                                + eM
-                            )
-                        );
-
-
-
-                    const isExpired =
-
-                        nowMins
-                        >
-                        (
-                            eH * 60
-                            + eM
-                        )
-
-                        &&
-
-                        !isDone;
-
-
-
-                    const pts =
-
-                        i
-                        ===
-                        activeRules.length
-                        - 1
-
-                        ?
-
-                        (
-                            100
-                            -
-                            (
-                                pointsPerRule
-                                *
-                                (
-                                    activeRules.length
-                                    - 1
-                                )
-                            )
-                        )
-
-                        :
-
-                        pointsPerRule;
-
-
-
-                    container.innerHTML += `
-
-                        <div
-                            class="task-card glass rounded-xl flex justify-between items-center ${
-                                isDone
-                                    ? "done"
-                                    :
-                                isActive
-                                    ? "active-task"
-                                    :
-                                isExpired
-                                    ? "opacity-30 border-l-red-500"
-                                    :
-                                    ""
-                            }"
-
-                            onclick="${
-                                !isDone && isActive
-                                    ?
-                                    `toggleRuleWeb(${r.id})`
-                                    :
-                                    ""
-                            }"
-                        >
-
-                            <div class="flex-1">
-
-                                <div class="font-bold text-gray-100 uppercase text-[10px] tracking-tight">
-
-                                    ${r.text}
-
-                                </div>
-
-
-                                <div class="text-[8px] text-gray-500 font-mono flex items-center gap-2">
-
-                                    <span>
-
-                                        ${format12Hr(
-                                            r.startTime
-                                        )}
-
-                                        -
-
-                                        ${format12Hr(
-                                            r.endTime
-                                        )}
-
-                                    </span>
-
-
-                                    <span class="text-yellow-500/50">
-
-                                        • ${pts} PTS
-
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-
-                            <div class="flex items-center gap-3 shrink-0">
-
-                                <div class="text-[8px] font-black uppercase tracking-tighter">
-
-                                    ${
-                                        isDone
-
-                                        ?
-
-                                        '<span class="text-blue-400">✓ DONE</span>'
-
-                                        :
-
-                                        isActive
-
-                                        ?
-
-                                        '<span class="text-emerald-500">● LIVE</span>'
-
-                                        :
-
-                                        isExpired
-
-                                        ?
-
-                                        '<span class="text-red-500">✕ MISSED</span>'
-
-                                        :
-
-                                        "WAIT"
-                                    }
-
-                                </div>
-
-
-                                <button
-                                    onclick="deleteRuleWeb(event, ${r.id})"
-                                    class="p-1 hover:bg-white/5 rounded transition text-[12px]">
-
-                                    🗑️
-
-                                </button>
-
-                            </div>
-
-                        </div>
-                    `;
-
-                }
-
-            );
-
-        }
-
-
-
-        // ==========================
-        // ADD RULE MODAL
-        // ==========================
-
-        const modal =
-            document.getElementById(
-                "add-modal"
-            );
-
-
-        document
-            .getElementById(
-                "add-rule-btn"
-            )
-            .onclick =
-            () => {
-
-                modal.classList.add(
-                    "active"
-                );
-
-            };
-
-
-        document
-            .getElementById(
-                "cancel-add"
-            )
-            .onclick =
-            () => {
-
-                modal.classList.remove(
-                    "active"
-                );
-
-            };
-
-
-
-        document
-            .getElementById(
-                "save-rule"
-            )
-            .onclick =
-            async () => {
-
-
-                const text =
-                    document
-                        .getElementById(
-                            "rule-text"
-                        )
-                        .value
-                        .trim();
-
-
-                const start =
-                    document
-                        .getElementById(
-                            "rule-start"
-                        )
-                        .value;
-
-
-                const end =
-                    document
-                        .getElementById(
-                            "rule-end"
-                        )
-                        .value;
-
-
-
-                if (
-                    !text
-                    ||
-                    !start
-                    ||
-                    !end
-                ) {
-
-                    return alert(
-                        "Please fill all fields!"
-                    );
-
-                }
-
-
-
-                const newRule = {
-
-                    id:
-                        Date.now(),
-
-                    text:
-                        text,
-
-                    startTime:
-                        start,
-
-                    endTime:
-                        end
-
-                };
-
-
-
-                const updatedRules =
-                    [
-                        ...activeRules,
-                        newRule
-                    ];
-
-
-
-                await updateDoc(
-
-                    doc(
-                        db,
-                        "users",
-                        auth.currentUser.uid
-                    ),
-
-                    {
-
-                        customRules:
-                            updatedRules
-
-                    }
-
-                );
-
-
-
-                modal.classList.remove(
-                    "active"
-                );
-
-
-                document
-                    .getElementById(
-                        "rule-text"
-                    )
-                    .value =
-                    "";
-
-            };
-
-
-
-        // ==========================
-        // LEADERBOARD
-        // ==========================
-
-        function syncLeaderboard() {
-
-
-            const q =
-                query(
-
-                    collection(
-                        db,
-                        "users"
-                    ),
-
-                    orderBy(
-                        "points",
-                        "desc"
-                    ),
-
-                    limit(10)
-
-                );
-
-
-
-            onSnapshot(
-                q,
-                (snap) => {
-
-
-                    const b =
-                        document
-                            .getElementById(
-                                "leaderboard-body"
-                            );
-
-
-                    b.innerHTML =
-                        "";
-
-
-                    let rank =
-                        1;
-
-
-
-                    snap.forEach(
-                        d => {
-
-
-                            const data =
-                                d.data();
-
-
-                            const isSelf =
-                                data.uid
-                                ===
-                                auth
-                                    .currentUser
-                                    ?.uid;
-
-
-
-                            b.innerHTML += `
-
-                                <tr class="border-b border-white/5 ${
-                                    isSelf
-                                        ?
-                                        "bg-blue-500/5"
-                                        :
-                                        ""
-                                }">
-
-                                    <td class="py-2.5 pr-2 font-bold w-8 text-center ${
-                                        rank <= 3
-                                            ?
-                                            "text-yellow-500"
-                                            :
-                                            "text-blue-500/50"
-                                    }">
-
-                                        #${rank}
-
-                                    </td>
-
-
-                                    <td class="py-2.5 font-bold text-gray-200">
-
-                                        ${
-                                            data.name
-                                            ||
-                                            "Warrior"
-                                        }
-
-                                        ${
-                                            isSelf
-
-                                            ?
-
-                                            '<span class="text-[7px] bg-blue-500 text-white px-1 rounded ml-1">YOU</span>'
-
-                                            :
-
-                                            ""
-                                        }
-
-                                    </td>
-
-
-                                    <td class="py-2.5 text-right font-black text-emerald-500 opacity-60">
-
-                                        ${
-                                            data.points
-                                            ||
-                                            0
-                                        } P
-
-                                    </td>
-
-                                </tr>
-                            `;
-
-
-                            rank++;
-
-                        }
-                    );
-
-                }
-            );
-
-        }
-
-
-
-        // ==========================
-        // TIMER
-        // ==========================
-
-        function updateTimer() {
-
-
-            const diff =
-                CHALLENGE_START_DATE
-                -
-                new Date();
-
-
-            const display =
-                document
-                    .getElementById(
-                        "countdown-timer"
-                    );
-
-
-
-            if (
-                diff > 0
-            ) {
-
-
-                const d =
-                    Math.floor(
-                        diff / 86400000
-                    );
-
-
-                const h =
-                    Math.floor(
-                        (
-                            diff / 3600000
-                        )
-                        %
-                        24
-                    );
-
-
-                const m =
-                    Math.floor(
-                        (
-                            diff / 60000
-                        )
-                        %
-                        60
-                    );
-
-
-                const s =
-                    Math.floor(
-                        (
-                            diff / 1000
-                        )
-                        %
-                        60
-                    );
-
-
-
-                display.innerText =
-
-                    `${String(d).padStart(2,"0")}d : `
-
-                    +
-
-                    `${String(h).padStart(2,"0")}h : `
-
-                    +
-
-                    `${String(m).padStart(2,"0")}m : `
-
-                    +
-
-                    `${String(s).padStart(2,"0")}s`;
-
-            }
-
-            else {
-
-
-                display.innerText =
-                    "WINTER ARC IS LIVE!";
-
-
-                display.classList.add(
-                    "animate-pulse"
-                );
-
-            }
-
-        }
-
-
-
-        // ==========================
-        // AI COACH
-        // ==========================
-
-        async function askCoach() {
-
-
-            const input =
-                document
-                    .getElementById(
-                        "chat-input"
-                    );
-
-
-            const msg =
-                input
-                    .value
-                    .trim();
-
-
-
-            if (
-                !msg
-                ||
-                !userProfile
-            )
-                return;
-
-
-
-            appendMsg(
-                msg,
-                true
-            );
-
-
-            input.value =
-                "";
-
-
-
-            const loadingId =
-                "L-"
-                +
-                Date.now();
-
-
-
-            appendMsg(
-                "...",
-                false,
-                loadingId
-            );
-
-
-
-            try {
-
-
-                const response =
-                    await fetch(
-
-                        "https://winter.gupta07animesh.workers.dev/",
-
-                        {
-
-                            method:
-                                "POST",
-
-                            headers:
-                                {
-
-                                    "Content-Type":
-                                        "application/json"
-
-                                },
-
-                            body:
-                                JSON.stringify(
-                                    {
-
-                                        message:
-                                            msg,
-
-                                        name:
-                                            userProfile.name
-
-                                    }
-                                )
-
-                        }
-
-                    );
-
-
-
-                const data =
-                    await response.json();
-
-
-
-                document
-                    .getElementById(
-                        loadingId
-                    )
-                    .innerText =
-
-                    data.reply
-
-                    ||
-
-                    "Coach is busy!";
-
-            }
-
-            catch (error) {
-
-
-                document
-                    .getElementById(
-                        loadingId
-                    )
-                    .innerText =
-
-                    "Coach is offline.";
-
-            }
-
-        }
-
-
-
-        function appendMsg(
-            t,
-            u,
-            id
-        ) {
-
-
-            const d =
-                document
-                    .createElement(
-                        "div"
-                    );
-
-
-            d.className =
-
-                `chat-bubble ${
-                    u
-
-                    ?
-
-                    "self-end bg-blue-600 text-white shadow-lg"
-
-                    :
-
-                    "self-start bg-white/10 border border-white/5 text-gray-300"
-                }`;
-
-
-
-            if (id)
-                d.id =
-                    id;
-
-
-            d.innerText =
-                t;
-
-
-
-            const c =
-                document
-                    .getElementById(
-                        "chat-messages"
-                    );
-
-
-            c.appendChild(
-                d
-            );
-
-
-            c.scrollTop =
-                c.scrollHeight;
-
-        }
-
-
-
-        // ==========================
-        // BUTTON EVENTS
-        // ==========================
-
-        document
-            .getElementById(
-                "chat-toggle"
-            )
-            .onclick =
-            () => {
-
-                document
-                    .getElementById(
-                        "chat-window"
-                    )
-                    .classList
-                    .toggle(
-                        "active"
-                    );
-
-            };
-
-
-
-        document
-            .getElementById(
-                "send-btn"
-            )
-            .onclick =
-            askCoach;
-
-
-
-        document
-            .getElementById(
-                "chat-input"
-            )
-            .onkeydown =
-            (e) => {
-
-                if (
-                    e.key
-                    ===
-                    "Enter"
-                ) {
-
-                    askCoach();
-
-                }
-
-            };
-
-
-
-        document
-            .getElementById(
-                "edit-name-btn"
-            )
-            .onclick =
-            async () => {
-
-
-                const n =
-                    prompt(
-
-                        "Change your Warrior name:",
-
-                        userProfile?.name
-
-                    );
-
-
-
-                if (
-                    n
-                    &&
-                    n.trim()
-                ) {
-
-                    await updateDoc(
-
-                        doc(
-                            db,
-                            "users",
-                            auth
-                                .currentUser
-                                .uid
-                        ),
-
-                        {
-
-                            name:
-                                n.trim()
-
-                        }
-
-                    );
-
-                }
-
-            };
-
-
-
-        document
-            .getElementById(
-                "logout-btn"
-            )
-            .onclick =
-            () => {
-
-
-                if (
-                    confirm(
-                        "Logout?"
-                    )
-                ) {
-
-                    signOut(
-                        auth
-                    );
-
-                }
-
-            };
-
-
-
-        setInterval(
-            updateTimer,
-            1000
-        );
-
-
-        updateTimer();
-
-    </script>
+  </footer>
 
 </body>
 </html>
