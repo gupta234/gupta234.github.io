@@ -998,9 +998,22 @@
                                     points:
                                         (
                                             data.points
-                                            +
-                                            pointsToAdd
+                                            || 0
                                         )
+                                        +
+                                        pointsToAdd,
+
+
+                                    [
+                                        `dailyCompletedRules.${today}`
+                                    ]:
+                                        todayCompleted,
+
+
+                                    [
+                                        `dailyTaskCounts.${today}`
+                                    ]:
+                                        newCount
 
                                 };
 
@@ -1010,38 +1023,43 @@
                                     newCount
                                     ===
                                     activeRules.length
+
+                                    ||
+
+                                    newCount
+                                    >= 5
                                 ) {
 
-                                    updates
-                                        .attendance
-                                        =
+
+                                    const att =
                                         data.attendance
                                         || {};
 
-                                    updates.attendance[today]
-                                        = "present";
 
-                                    const newStreak =
-                                        calculateStreakJS(
-                                            updates.attendance
-                                        );
+                                    if (
+                                        att[today]
+                                        !==
+                                        "present"
+                                    ) {
 
-                                    updates.streak
-                                        =
-                                        newStreak;
+
+                                        att[today] =
+                                            "present";
+
+
+                                        updates.attendance =
+                                            att;
+
+
+                                        updates.streak =
+                                            calculateStreakJS(
+                                                att
+                                            );
+
+                                    }
 
                                 }
 
-
-                                updates
-                                    .dailyCompletedRules
-                                    =
-                                    dailyMap;
-
-                                updates
-                                    .dailyCompletedRules[today]
-                                    =
-                                    todayCompleted;
 
 
                                 t.update(
@@ -1052,6 +1070,7 @@
                             }
 
                         }
+
                     );
 
                 }
@@ -1059,7 +1078,7 @@
                 catch (e) {
 
                     console.error(
-                        "Error completing rule:",
+                        "Toggle Error:",
                         e
                     );
 
@@ -1070,31 +1089,234 @@
 
 
         // ==========================
-        // UPDATE CHECKLIST
+        // DELETE RULE
         // ==========================
 
-        async function updateChecklist() {
+        window.deleteRuleWeb =
+            async (
+                e,
+                ruleId
+            ) => {
+
+
+                e.stopPropagation();
+
+
+                if (
+                    !confirm(
+                        "Do you want delete arc rule?"
+                    )
+                )
+                    return;
+
+
+
+                const today =
+                    new Date()
+                        .getDate()
+                        .toString();
+
+
+                const completedList =
+                    userProfile
+                        ?.dailyCompletedRules
+                        ?.[today]
+                    || [];
+
+
+
+                let pointsToDeduct =
+                    0;
+
+
+
+                if (
+                    completedList
+                        .includes(ruleId)
+                ) {
+
+
+                    const pointsPerRule =
+                        Math.floor(
+                            100
+                            /
+                            activeRules.length
+                        );
+
+
+                    pointsToDeduct =
+
+                        completedList.length
+                        ===
+                        activeRules.length
+
+                        ?
+
+                        (
+                            100
+                            -
+                            (
+                                pointsPerRule
+                                *
+                                (
+                                    activeRules.length
+                                    - 1
+                                )
+                            )
+                        )
+
+                        :
+
+                        pointsPerRule;
+
+                }
+
+
+
+                const updatedRules =
+                    activeRules.filter(
+                        r =>
+                            r.id !== ruleId
+                    );
+
+
+                const userRef =
+                    doc(
+                        db,
+                        "users",
+                        auth.currentUser.uid
+                    );
+
+
+
+                try {
+
+                    await runTransaction(
+                        db,
+                        async (t) => {
+
+
+                            const snap =
+                                await t.get(
+                                    userRef
+                                );
+
+
+                            const data =
+                                snap.data();
+
+
+                            const dailyMap =
+                                data
+                                    .dailyCompletedRules
+                                || {};
+
+
+                            const todayCompleted =
+                                (
+                                    dailyMap[today]
+                                    || []
+                                )
+                                .filter(
+                                    id =>
+                                        id !== ruleId
+                                );
+
+
+
+                            let updates = {
+
+                                customRules:
+                                    updatedRules,
+
+
+                                [
+                                    `dailyCompletedRules.${today}`
+                                ]:
+                                    todayCompleted,
+
+
+                                [
+                                    `dailyTaskCounts.${today}`
+                                ]:
+                                    todayCompleted.length
+
+                            };
+
+
+
+                            if (
+                                pointsToDeduct > 0
+                            ) {
+
+                                updates.points =
+                                    Math.max(
+
+                                        0,
+
+                                        (
+                                            data.points
+                                            || 0
+                                        )
+                                        -
+                                        pointsToDeduct
+
+                                    );
+
+                            }
+
+
+
+                            t.update(
+                                userRef,
+                                updates
+                            );
+
+                        }
+                    );
+
+                }
+
+                catch (err) {
+
+                    console.error(
+                        "Delete Error:",
+                        err
+                    );
+
+                }
+
+            };
+
+
+
+        // ==========================
+        // CHECKLIST UI
+        // ==========================
+
+        function updateChecklist() {
 
             const container =
                 document.getElementById(
                     "tasks-container"
                 );
 
-            container.innerHTML = "";
-
 
             if (
-                !activeRules
-                ||
-                activeRules.length === 0
+                !activeRules.length
             ) {
 
                 container.innerHTML =
-                    `<p class="text-[9px] text-gray-500">No tasks available</p>`;
+                    '<div class="text-center py-10 opacity-20 font-black italic">NO RULES SET</div>';
 
                 return;
 
             }
+
+
+
+            container.innerHTML =
+                "";
 
 
             const today =
@@ -1102,68 +1324,256 @@
                     .getDate()
                     .toString();
 
-            const completedToday =
+
+            const completedList =
                 userProfile
-                    ?.dailyCompletedRules?.[today]
+                    ?.dailyCompletedRules
+                    ?.[today]
                 || [];
 
 
+            const nowMins =
+                new Date()
+                    .getHours()
+                * 60
+
+                +
+
+                new Date()
+                    .getMinutes();
+
+
+
+            const pointsPerRule =
+                Math.floor(
+                    100
+                    /
+                    activeRules.length
+                );
+
+
+
             activeRules.forEach(
-                (rule) => {
+                (
+                    r,
+                    i
+                ) => {
 
-                    const isCompleted =
-                        completedToday.includes(
-                            rule.id
+
+                    const [sH, sM] =
+                        (
+                            r.startTime
+                            || "00:00"
+                        )
+                        .split(":")
+                        .map(Number);
+
+
+                    const [eH, eM] =
+                        (
+                            r.endTime
+                            || "00:00"
+                        )
+                        .split(":")
+                        .map(Number);
+
+
+
+                    const isDone =
+                        completedList
+                            .includes(
+                                r.id
+                            );
+
+
+
+                    const isActive =
+
+                        (
+                            new Date()
+                            >=
+                            CHALLENGE_START_DATE
+                        )
+
+                        &&
+
+                        (
+                            nowMins
+                            >=
+                            (
+                                sH * 60
+                                + sM
+                            )
+                        )
+
+                        &&
+
+                        (
+                            nowMins
+                            <=
+                            (
+                                eH * 60
+                                + eM
+                            )
                         );
 
-                    const card =
-                        document.createElement(
-                            "div"
-                        );
 
-                    card.className =
-                        `task-card ${
-                            isCompleted
-                                ?
-                                "done"
-                                :
-                                "active-task"
-                        }`;
 
-                    card.onclick = () =>
-                        window.toggleRuleWeb(
-                            rule.id
-                        );
+                    const isExpired =
 
-                    card.innerHTML = `
+                        nowMins
+                        >
+                        (
+                            eH * 60
+                            + eM
+                        )
 
-                        <div class="flex justify-between items-start">
+                        &&
+
+                        !isDone;
+
+
+
+                    const pts =
+
+                        i
+                        ===
+                        activeRules.length
+                        - 1
+
+                        ?
+
+                        (
+                            100
+                            -
+                            (
+                                pointsPerRule
+                                *
+                                (
+                                    activeRules.length
+                                    - 1
+                                )
+                            )
+                        )
+
+                        :
+
+                        pointsPerRule;
+
+
+
+                    container.innerHTML += `
+
+                        <div
+                            class="task-card glass rounded-xl flex justify-between items-center ${
+                                isDone
+                                    ? "done"
+                                    :
+                                isActive
+                                    ? "active-task"
+                                    :
+                                isExpired
+                                    ? "opacity-30 border-l-red-500"
+                                    :
+                                    ""
+                            }"
+
+                            onclick="${
+                                !isDone && isActive
+                                    ?
+                                    `toggleRuleWeb(${r.id})`
+                                    :
+                                    ""
+                            }"
+                        >
 
                             <div class="flex-1">
 
-                                <div class="font-bold text-sm text-white">
-                                    ${rule.name || "Task"}
+                                <div class="font-bold text-gray-100 uppercase text-[10px] tracking-tight">
+
+                                    ${r.text}
+
                                 </div>
 
-                                <div class="text-[8px] text-gray-400 mt-1">
-                                    ${format12Hr(rule.startTime)} - ${format12Hr(rule.endTime)}
+
+                                <div class="text-[8px] text-gray-500 font-mono flex items-center gap-2">
+
+                                    <span>
+
+                                        ${format12Hr(
+                                            r.startTime
+                                        )}
+
+                                        -
+
+                                        ${format12Hr(
+                                            r.endTime
+                                        )}
+
+                                    </span>
+
+
+                                    <span class="text-yellow-500/50">
+
+                                        • ${pts} PTS
+
+                                    </span>
+
                                 </div>
 
                             </div>
 
-                            <div class="text-lg">
-                                ${isCompleted ? "✓" : "⚪"}
+
+                            <div class="flex items-center gap-3 shrink-0">
+
+                                <div class="text-[8px] font-black uppercase tracking-tighter">
+
+                                    ${
+                                        isDone
+
+                                        ?
+
+                                        '<span class="text-blue-400">✓ DONE</span>'
+
+                                        :
+
+                                        isActive
+
+                                        ?
+
+                                        '<span class="text-emerald-500">● LIVE</span>'
+
+                                        :
+
+                                        isExpired
+
+                                        ?
+
+                                        '<span class="text-red-500">✕ MISSED</span>'
+
+                                        :
+
+                                        "WAIT"
+                                    }
+
+                                </div>
+
+
+                                <button
+                                    onclick="deleteRuleWeb(event, ${r.id})"
+                                    class="p-1 hover:bg-white/5 rounded transition text-[12px]">
+
+                                    🗑️
+
+                                </button>
+
                             </div>
 
                         </div>
-
                     `;
 
-                    container.appendChild(
-                        card
-                    );
-
                 }
+
             );
 
         }
@@ -1171,21 +1581,165 @@
 
 
         // ==========================
-        // SYNC LEADERBOARD
+        // ADD RULE MODAL
         // ==========================
 
-        async function syncLeaderboard() {
+        const modal =
+            document.getElementById(
+                "add-modal"
+            );
 
-            const tbody =
-                document.getElementById(
-                    "leaderboard-body"
+
+        document
+            .getElementById(
+                "add-rule-btn"
+            )
+            .onclick =
+            () => {
+
+                modal.classList.add(
+                    "active"
                 );
 
-            tbody.innerHTML = "";
+            };
 
 
-            const leaderboardRef =
+        document
+            .getElementById(
+                "cancel-add"
+            )
+            .onclick =
+            () => {
+
+                modal.classList.remove(
+                    "active"
+                );
+
+            };
+
+
+
+        document
+            .getElementById(
+                "save-rule"
+            )
+            .onclick =
+            async () => {
+
+
+                const text =
+                    document
+                        .getElementById(
+                            "rule-text"
+                        )
+                        .value
+                        .trim();
+
+
+                const start =
+                    document
+                        .getElementById(
+                            "rule-start"
+                        )
+                        .value;
+
+
+                const end =
+                    document
+                        .getElementById(
+                            "rule-end"
+                        )
+                        .value;
+
+
+
+                if (
+                    !text
+                    ||
+                    !start
+                    ||
+                    !end
+                ) {
+
+                    return alert(
+                        "Please fill all fields!"
+                    );
+
+                }
+
+
+
+                const newRule = {
+
+                    id:
+                        Date.now(),
+
+                    text:
+                        text,
+
+                    startTime:
+                        start,
+
+                    endTime:
+                        end
+
+                };
+
+
+
+                const updatedRules =
+                    [
+                        ...activeRules,
+                        newRule
+                    ];
+
+
+
+                await updateDoc(
+
+                    doc(
+                        db,
+                        "users",
+                        auth.currentUser.uid
+                    ),
+
+                    {
+
+                        customRules:
+                            updatedRules
+
+                    }
+
+                );
+
+
+
+                modal.classList.remove(
+                    "active"
+                );
+
+
+                document
+                    .getElementById(
+                        "rule-text"
+                    )
+                    .value =
+                    "";
+
+            };
+
+
+
+        // ==========================
+        // LEADERBOARD
+        // ==========================
+
+        function syncLeaderboard() {
+
+
+            const q =
                 query(
+
                     collection(
                         db,
                         "users"
@@ -1196,56 +1750,109 @@
                         "desc"
                     ),
 
-                    limit(5)
+                    limit(10)
+
                 );
 
 
+
             onSnapshot(
-                leaderboardRef,
+                q,
+                (snap) => {
 
-                (snapshot) => {
 
-                    tbody.innerHTML = "";
+                    const b =
+                        document
+                            .getElementById(
+                                "leaderboard-body"
+                            );
 
-                    let rank = 1;
 
-                    snapshot.forEach(
-                        (doc) => {
+                    b.innerHTML =
+                        "";
 
-                            const user =
-                                doc.data();
 
-                            const row =
-                                document.createElement(
-                                    "tr"
-                                );
+                    let rank =
+                        1;
 
-                            row.innerHTML = `
 
-                                <td class="py-2 px-2 text-yellow-500 font-black">
-                                    #${rank}
-                                </td>
 
-                                <td class="py-2 px-2">
-                                    <div class="font-bold text-white">
-                                        ${user.name || "Warrior"}
-                                    </div>
-                                    <div class="text-[9px] text-gray-500">
-                                        ${user.points || 0} pts
-                                    </div>
-                                </td>
+                    snap.forEach(
+                        d => {
 
-                                <td class="text-right py-2 px-2">
-                                    <div class="text-orange-500 font-black">
-                                        🔥 ${user.streak || 0}
-                                    </div>
-                                </td>
 
+                            const data =
+                                d.data();
+
+
+                            const isSelf =
+                                data.uid
+                                ===
+                                auth
+                                    .currentUser
+                                    ?.uid;
+
+
+
+                            b.innerHTML += `
+
+                                <tr class="border-b border-white/5 ${
+                                    isSelf
+                                        ?
+                                        "bg-blue-500/5"
+                                        :
+                                        ""
+                                }">
+
+                                    <td class="py-2.5 pr-2 font-bold w-8 text-center ${
+                                        rank <= 3
+                                            ?
+                                            "text-yellow-500"
+                                            :
+                                            "text-blue-500/50"
+                                    }">
+
+                                        #${rank}
+
+                                    </td>
+
+
+                                    <td class="py-2.5 font-bold text-gray-200">
+
+                                        ${
+                                            data.name
+                                            ||
+                                            "Warrior"
+                                        }
+
+                                        ${
+                                            isSelf
+
+                                            ?
+
+                                            '<span class="text-[7px] bg-blue-500 text-white px-1 rounded ml-1">YOU</span>'
+
+                                            :
+
+                                            ""
+                                        }
+
+                                    </td>
+
+
+                                    <td class="py-2.5 text-right font-black text-emerald-500 opacity-60">
+
+                                        ${
+                                            data.points
+                                            ||
+                                            0
+                                        } P
+
+                                    </td>
+
+                                </tr>
                             `;
 
-                            tbody.appendChild(
-                                row
-                            );
 
                             rank++;
 
@@ -1260,388 +1867,429 @@
 
 
         // ==========================
-        // ADD CUSTOM RULE LISTENERS
+        // TIMER
         // ==========================
 
-        const addModal =
-            document.getElementById(
-                "add-modal"
-            );
+        function updateTimer() {
 
-        const addRuleBtn =
-            document.getElementById(
-                "add-rule-btn"
-            );
-
-        const cancelBtn =
-            document.getElementById(
-                "cancel-add"
-            );
-
-        const saveBtn =
-            document.getElementById(
-                "save-rule"
-            );
-
-        const ruleText =
-            document.getElementById(
-                "rule-text"
-            );
-
-        const ruleStart =
-            document.getElementById(
-                "rule-start"
-            );
-
-        const ruleEnd =
-            document.getElementById(
-                "rule-end"
-            );
-
-
-        addRuleBtn.addEventListener(
-            "click",
-            () => {
-                addModal.classList.add(
-                    "active"
-                );
-            }
-        );
-
-
-        cancelBtn.addEventListener(
-            "click",
-            () => {
-                addModal.classList.remove(
-                    "active"
-                );
-
-                ruleText.value = "";
-                ruleStart.value = "";
-                ruleEnd.value = "";
-            }
-        );
-
-
-        saveBtn.addEventListener(
-            "click",
-            async () => {
-
-                const name =
-                    ruleText.value.trim();
-
-                const start =
-                    ruleStart.value;
-
-                const end =
-                    ruleEnd.value;
-
-
-                if (!name || !start || !end) {
-
-                    return alert(
-                        "Please fill all fields!"
-                    );
-
-                }
-
-
-                const customRules =
-                    userProfile?.customRules
-                    || [];
-
-                const newRule = {
-
-                    id:
-                        "custom_"
-                        +
-                        Date.now(),
-
-                    name:
-                        name,
-
-                    startTime:
-                        start,
-
-                    endTime:
-                        end
-
-                };
-
-                customRules.push(
-                    newRule
-                );
-
-
-                const userRef =
-                    doc(
-                        db,
-                        "users",
-                        auth.currentUser.uid
-                    );
-
-
-                try {
-
-                    await updateDoc(
-                        userRef,
-                        {
-                            customRules:
-                                customRules
-                        }
-                    );
-
-                    addModal.classList.remove(
-                        "active"
-                    );
-
-                    ruleText.value = "";
-                    ruleStart.value = "";
-                    ruleEnd.value = "";
-
-                }
-
-                catch (e) {
-
-                    console.error(
-                        "Error saving rule:",
-                        e
-                    );
-
-                    alert(
-                        "Failed to save rule"
-                    );
-
-                }
-
-            }
-        );
-
-
-
-        // ==========================
-        // AI COACH LISTENERS
-        // ==========================
-
-        const chatToggle =
-            document.getElementById(
-                "chat-toggle"
-            );
-
-        const chatWindow =
-            document.getElementById(
-                "chat-window"
-            );
-
-        const chatInput =
-            document.getElementById(
-                "chat-input"
-            );
-
-        const sendBtn =
-            document.getElementById(
-                "send-btn"
-            );
-
-        const chatMessages =
-            document.getElementById(
-                "chat-messages"
-            );
-
-
-        chatToggle.addEventListener(
-            "click",
-            () => {
-                chatWindow.classList.toggle(
-                    "active"
-                );
-            }
-        );
-
-
-        sendBtn.addEventListener(
-            "click",
-            () => {
-
-                const message =
-                    chatInput.value.trim();
-
-                if (!message)
-                    return;
-
-
-                const userBubble =
-                    document.createElement(
-                        "div"
-                    );
-
-                userBubble.className =
-                    "chat-bubble self-end bg-blue-600 text-white";
-
-                userBubble.textContent =
-                    message;
-
-                chatMessages.appendChild(
-                    userBubble
-                );
-
-                chatInput.value = "";
-
-
-                setTimeout(() => {
-
-                    const aiBubble =
-                        document.createElement(
-                            "div"
-                        );
-
-                    aiBubble.className =
-                        "chat-bubble self-start bg-white/5 text-gray-300";
-
-                    aiBubble.textContent =
-                        "Pushup karo! Tera focus kal se double hona chahiye! 💪";
-
-                    chatMessages.appendChild(
-                        aiBubble
-                    );
-
-                    chatMessages.scrollTop =
-                        chatMessages.scrollHeight;
-
-                }, 500);
-
-            }
-        );
-
-
-        chatInput.addEventListener(
-            "keydown",
-            (e) => {
-
-                if (
-                    e.key === "Enter"
-                ) {
-
-                    sendBtn.click();
-
-                }
-
-            }
-        );
-
-
-
-        // ==========================
-        // COUNTDOWN TIMER
-        // ==========================
-
-        function updateCountdown() {
-
-            const now =
-                new Date();
-
-            const countdown =
-                new Date(2026, 8, 1);
 
             const diff =
-                countdown - now;
+                CHALLENGE_START_DATE
+                -
+                new Date();
 
 
-            if (diff <= 0) {
-
+            const display =
                 document
                     .getElementById(
                         "countdown-timer"
-                    )
-                    .textContent =
-                    "CHALLENGE STARTED!";
+                    );
 
-                return;
+
+
+            if (
+                diff > 0
+            ) {
+
+
+                const d =
+                    Math.floor(
+                        diff / 86400000
+                    );
+
+
+                const h =
+                    Math.floor(
+                        (
+                            diff / 3600000
+                        )
+                        %
+                        24
+                    );
+
+
+                const m =
+                    Math.floor(
+                        (
+                            diff / 60000
+                        )
+                        %
+                        60
+                    );
+
+
+                const s =
+                    Math.floor(
+                        (
+                            diff / 1000
+                        )
+                        %
+                        60
+                    );
+
+
+
+                display.innerText =
+
+                    `${String(d).padStart(2,"0")}d : `
+
+                    +
+
+                    `${String(h).padStart(2,"0")}h : `
+
+                    +
+
+                    `${String(m).padStart(2,"0")}m : `
+
+                    +
+
+                    `${String(s).padStart(2,"0")}s`;
 
             }
 
+            else {
 
-            const days =
-                Math.floor(
-                    diff
-                    /
-                    (1000 * 60 * 60 * 24)
+
+                display.innerText =
+                    "WINTER ARC IS LIVE!";
+
+
+                display.classList.add(
+                    "animate-pulse"
                 );
 
-            const hours =
-                Math.floor(
-                    (
-                        diff
-                        %
-                        (1000 * 60 * 60 * 24)
-                    )
-                    /
-                    (1000 * 60 * 60)
-                );
-
-            const mins =
-                Math.floor(
-                    (diff % (1000 * 60 * 60))
-                    /
-                    (1000 * 60)
-                );
-
-            const secs =
-                Math.floor(
-                    (diff % (1000 * 60))
-                    /
-                    1000
-                );
-
-
-            document
-                .getElementById(
-                    "countdown-timer"
-                )
-                .textContent =
-                `${String(days).padStart(2, "0")}d : ${String(hours).padStart(2, "0")}h : ${String(mins).padStart(2, "0")}m : ${String(secs).padStart(2, "0")}s`;
+            }
 
         }
 
 
-        updateCountdown();
 
-        setInterval(
-            updateCountdown,
-            1000
-        );
+        // ==========================
+        // AI COACH
+        // ==========================
+
+        async function askCoach() {
+
+
+            const input =
+                document
+                    .getElementById(
+                        "chat-input"
+                    );
+
+
+            const msg =
+                input
+                    .value
+                    .trim();
+
+
+
+            if (
+                !msg
+                ||
+                !userProfile
+            )
+                return;
+
+
+
+            appendMsg(
+                msg,
+                true
+            );
+
+
+            input.value =
+                "";
+
+
+
+            const loadingId =
+                "L-"
+                +
+                Date.now();
+
+
+
+            appendMsg(
+                "...",
+                false,
+                loadingId
+            );
+
+
+
+            try {
+
+
+                const response =
+                    await fetch(
+
+                        "https://winter.gupta07animesh.workers.dev/",
+
+                        {
+
+                            method:
+                                "POST",
+
+                            headers:
+                                {
+
+                                    "Content-Type":
+                                        "application/json"
+
+                                },
+
+                            body:
+                                JSON.stringify(
+                                    {
+
+                                        message:
+                                            msg,
+
+                                        name:
+                                            userProfile.name
+
+                                    }
+                                )
+
+                        }
+
+                    );
+
+
+
+                const data =
+                    await response.json();
+
+
+
+                document
+                    .getElementById(
+                        loadingId
+                    )
+                    .innerText =
+
+                    data.reply
+
+                    ||
+
+                    "Coach is busy!";
+
+            }
+
+            catch (error) {
+
+
+                document
+                    .getElementById(
+                        loadingId
+                    )
+                    .innerText =
+
+                    "Coach is offline.";
+
+            }
+
+        }
+
+
+
+        function appendMsg(
+            t,
+            u,
+            id
+        ) {
+
+
+            const d =
+                document
+                    .createElement(
+                        "div"
+                    );
+
+
+            d.className =
+
+                `chat-bubble ${
+                    u
+
+                    ?
+
+                    "self-end bg-blue-600 text-white shadow-lg"
+
+                    :
+
+                    "self-start bg-white/10 border border-white/5 text-gray-300"
+                }`;
+
+
+
+            if (id)
+                d.id =
+                    id;
+
+
+            d.innerText =
+                t;
+
+
+
+            const c =
+                document
+                    .getElementById(
+                        "chat-messages"
+                    );
+
+
+            c.appendChild(
+                d
+            );
+
+
+            c.scrollTop =
+                c.scrollHeight;
+
+        }
 
 
 
         // ==========================
-        // LOGOUT
+        // BUTTON EVENTS
         // ==========================
+
+        document
+            .getElementById(
+                "chat-toggle"
+            )
+            .onclick =
+            () => {
+
+                document
+                    .getElementById(
+                        "chat-window"
+                    )
+                    .classList
+                    .toggle(
+                        "active"
+                    );
+
+            };
+
+
+
+        document
+            .getElementById(
+                "send-btn"
+            )
+            .onclick =
+            askCoach;
+
+
+
+        document
+            .getElementById(
+                "chat-input"
+            )
+            .onkeydown =
+            (e) => {
+
+                if (
+                    e.key
+                    ===
+                    "Enter"
+                ) {
+
+                    askCoach();
+
+                }
+
+            };
+
+
+
+        document
+            .getElementById(
+                "edit-name-btn"
+            )
+            .onclick =
+            async () => {
+
+
+                const n =
+                    prompt(
+
+                        "Change your Warrior name:",
+
+                        userProfile?.name
+
+                    );
+
+
+
+                if (
+                    n
+                    &&
+                    n.trim()
+                ) {
+
+                    await updateDoc(
+
+                        doc(
+                            db,
+                            "users",
+                            auth
+                                .currentUser
+                                .uid
+                        ),
+
+                        {
+
+                            name:
+                                n.trim()
+
+                        }
+
+                    );
+
+                }
+
+            };
+
+
 
         document
             .getElementById(
                 "logout-btn"
             )
-            .addEventListener(
-                "click",
-                async () => {
+            .onclick =
+            () => {
 
-                    try {
 
-                        await signOut(auth);
+                if (
+                    confirm(
+                        "Logout?"
+                    )
+                ) {
 
-                    }
-
-                    catch (e) {
-
-                        console.error(
-                            "Logout error:",
-                            e
-                        );
-
-                    }
+                    signOut(
+                        auth
+                    );
 
                 }
-            );
+
+            };
+
+
+
+        setInterval(
+            updateTimer,
+            1000
+        );
+
+
+        updateTimer();
 
     </script>
 
