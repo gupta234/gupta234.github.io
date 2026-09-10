@@ -1000,43 +1000,40 @@
                                             data.points
                                             +
                                             pointsToAdd
-                                        )
+                                        ),
 
                                 };
 
 
-                                updates
-                                    .dailyCompletedRules
-                                    =
-                                    {
-                                        ...dailyMap,
-                                        [today]:
-                                            todayCompleted
-                                    };
+                                updates.dailyCompletedRules = {
 
+                                    ...dailyMap,
+
+                                    [today]: todayCompleted
+
+                                };
 
 
                                 if (
-                                    newCount
-                                    ===
-                                    activeRules.length
+                                    newCount === activeRules.length
                                 ) {
 
-                                    const att =
-                                        data.attendance || {};
+                                    updates.attendance = {
 
-                                    att[
-                                        today
-                                    ]
-                                    =
-                                        "present";
+                                        ...data.attendance,
 
-                                    updates.attendance = att;
+                                        [today]: "present"
+
+                                    };
+
+                                    const newStreak =
+                                        calculateStreakJS(
+                                            updates.attendance
+                                        );
+
 
                                     updates.streak =
-                                        calculateStreakJS(
-                                            att
-                                        );
+                                        newStreak;
 
                                 }
 
@@ -1048,13 +1045,17 @@
 
                             }
 
+
                         }
                     );
 
-                } catch (e) {
+                }
+
+                catch (err) {
 
                     console.error(
-                        e
+                        "Toggle failed:",
+                        err
                     );
 
                 }
@@ -1069,6 +1070,21 @@
 
         function updateChecklist() {
 
+            if (!activeRules)
+                return;
+
+
+            const today =
+                new Date()
+                    .getDate()
+                    .toString();
+
+
+            const completedRules =
+                userProfile?.dailyCompletedRules?.[today]
+                || [];
+
+
             const container =
                 document.getElementById(
                     "tasks-container"
@@ -1078,63 +1094,43 @@
             container.innerHTML = "";
 
 
-            const today =
-                new Date()
-                    .getDate()
-                    .toString();
+            for (
+                let rule of activeRules
+            ) {
+
+                const isCompleted =
+                    completedRules
+                        .includes(rule.id);
 
 
-            const completedToday =
-                userProfile
-                    ?.dailyCompletedRules
-                    ?.[today]
-                || [];
+                const statusClass =
+                    isCompleted
+                        ? "done"
+                        : "active-task";
 
 
-            activeRules.forEach(
-                (rule) => {
+                const taskHTML = `
 
-                    const isCompleted =
-                        completedToday
-                            .includes(
-                                rule.id
-                            );
+                    <div class="task-card ${statusClass}" onclick="toggleRuleWeb('${rule.id}')">
 
-
-                    const card =
-                        document.createElement(
-                            "div"
-                        );
-
-                    card.className =
-                        "task-card " +
-                        (
-                            isCompleted
-                                ? "done"
-                                : "active-task"
-                        );
-
-                    card.innerHTML = `
-                        <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-2 text-sm font-bold">
+                            <span>${isCompleted ? "✓" : "○"}</span>
                             <span>${rule.name}</span>
-                            <span class="text-[8px] text-gray-400">
-                                ${format12Hr(rule.startTime)} - ${format12Hr(rule.endTime)}
-                            </span>
                         </div>
-                    `;
 
-                    card.onclick =
-                        () =>
-                            window.toggleRuleWeb(
-                                rule.id
-                            );
+                        <div class="text-[8px] text-gray-500 mt-1">
+                            ${format12Hr(rule.startTime)} - ${format12Hr(rule.endTime)}
+                        </div>
 
-                    container.appendChild(
-                        card
-                    );
+                    </div>
 
-                }
-            );
+                `;
+
+
+                container.innerHTML +=
+                    taskHTML;
+
+            }
 
         }
 
@@ -1146,7 +1142,7 @@
 
         async function syncLeaderboard() {
 
-            const q =
+            const userRef =
                 query(
                     collection(
                         db,
@@ -1158,45 +1154,50 @@
                         "desc"
                     ),
 
-                    limit(10)
+                    limit(5)
+
                 );
 
 
             onSnapshot(
-                q,
-                (snapshot) => {
+                userRef,
+                (snap) => {
 
                     const tbody =
                         document.getElementById(
                             "leaderboard-body"
                         );
 
+
                     tbody.innerHTML = "";
 
-                    snapshot.forEach(
+
+                    snap.forEach(
                         (doc, index) => {
 
-                            const user =
+                            const data =
                                 doc.data();
 
-                            const row =
-                                document.createElement(
-                                    "tr"
-                                );
 
-                            row.innerHTML = `
-                                <td class="py-1">${index + 1}. ${user.name}</td>
-                                <td class="text-right font-bold text-yellow-400">${user.points}</td>
+                            const row = `
+
+                                <tr>
+                                    <td class="py-2 pr-2 font-bold text-yellow-500">${index + 1}.</td>
+                                    <td class="py-2 text-white font-semibold">${data.name}</td>
+                                    <td class="py-2 text-right font-black text-emerald-500">${data.points || 0}</td>
+                                </tr>
+
                             `;
 
-                            tbody.appendChild(
-                                row
-                            );
+
+                            tbody.innerHTML +=
+                                row;
 
                         }
                     );
 
                 }
+
             );
 
         }
@@ -1204,7 +1205,141 @@
 
 
         // ==========================
-        // MODAL CONTROLS
+        // TIMER
+        // ==========================
+
+        function updateCountdown() {
+
+            const now =
+                new Date();
+
+
+            const diff =
+                CHALLENGE_START_DATE - now;
+
+
+            if (diff <= 0) {
+
+                document.getElementById(
+                    "countdown-timer"
+                ).innerText =
+                    "Challenge Live! 🚀";
+
+                return;
+
+            }
+
+
+            const days =
+                Math.floor(
+                    diff
+                    /
+                    (1000 * 60 * 60 * 24)
+                );
+
+
+            const hours =
+                Math.floor(
+                    (
+                        diff
+                        %
+                        (1000 * 60 * 60 * 24)
+                    )
+                    /
+                    (1000 * 60 * 60)
+                );
+
+
+            const mins =
+                Math.floor(
+                    (
+                        diff
+                        %
+                        (1000 * 60 * 60)
+                    )
+                    /
+                    (1000 * 60)
+                );
+
+
+            const secs =
+                Math.floor(
+                    (diff % (1000 * 60))
+                    /
+                    1000
+                );
+
+
+            const pad = (n) =>
+                n
+                    .toString()
+                    .padStart(2, "0");
+
+
+            document.getElementById(
+                "countdown-timer"
+            ).innerText =
+                `${pad(days)}d : ${pad(hours)}h : ${pad(mins)}m : ${pad(secs)}s`;
+
+        }
+
+
+        updateCountdown();
+
+        setInterval(
+            updateCountdown,
+            1000
+        );
+
+
+
+        // ==========================
+        // EDIT NAME
+        // ==========================
+
+        document
+            .getElementById(
+                "edit-name-btn"
+            )
+            .addEventListener(
+                "click",
+                async () => {
+
+                    const newName =
+                        prompt(
+                            "Enter new name:",
+                            userProfile?.name
+                        );
+
+
+                    if (
+                        !newName
+                        ||
+                        newName.trim() === ""
+                    )
+                        return;
+
+
+                    await updateDoc(
+                        doc(
+                            db,
+                            "users",
+                            auth.currentUser.uid
+                        ),
+
+                        {
+                            name:
+                                newName.trim()
+                        }
+                    );
+
+                }
+            );
+
+
+
+        // ==========================
+        // ADD RULE MODAL
         // ==========================
 
         document
@@ -1253,29 +1388,41 @@
                 "click",
                 async () => {
 
-                    const name =
+                    const ruleName =
                         document
                             .getElementById(
                                 "rule-text"
-                            ).value;
+                            )
+                            .value
+                            .trim();
 
-                    const start =
+
+                    const startTime =
                         document
                             .getElementById(
                                 "rule-start"
-                            ).value;
+                            )
+                            .value;
 
-                    const end =
+
+                    const endTime =
                         document
                             .getElementById(
                                 "rule-end"
-                            ).value;
+                            )
+                            .value;
 
 
-                    if (!name || !start || !end) {
+                    if (
+                        !ruleName
+                        ||
+                        !startTime
+                        ||
+                        !endTime
+                    ) {
 
                         alert(
-                            "Fill all fields!"
+                            "Please fill all fields!"
                         );
 
                         return;
@@ -1286,56 +1433,63 @@
                     const newRule = {
 
                         id:
-                            Date.now()
-                                .toString(),
+                            Date.now().toString(),
 
-                        name,
+                        name:
+                            ruleName,
 
-                        startTime: start,
+                        startTime:
+                            startTime,
 
-                        endTime: end
+                        endTime:
+                            endTime
 
                     };
 
 
-                    const userRef =
+                    const updatedRules = [
+                        ...(
+                            userProfile?.customRules
+                            || []
+                        ),
+
+                        newRule
+                    ];
+
+
+                    await updateDoc(
                         doc(
                             db,
                             "users",
                             auth.currentUser.uid
-                        );
+                        ),
 
-
-
-                    const rules =
-                        userProfile?.customRules
-                        || [];
-
-                    rules.push(newRule);
-
-                    await updateDoc(
-                        userRef,
                         {
-                            customRules: rules
+                            customRules:
+                                updatedRules
                         }
                     );
-
 
 
                     document
                         .getElementById(
                             "rule-text"
-                        ).value = "";
+                        )
+                        .value = "";
+
 
                     document
                         .getElementById(
                             "rule-start"
-                        ).value = "";
+                        )
+                        .value = "";
+
 
                     document
                         .getElementById(
                             "rule-end"
-                        ).value = "";
+                        )
+                        .value = "";
 
 
                     document
@@ -1360,9 +1514,9 @@
             )
             .addEventListener(
                 "click",
-                () => {
+                async () => {
 
-                    signOut(auth);
+                    await signOut(auth);
 
                 }
             );
@@ -1370,154 +1524,7 @@
 
 
         // ==========================
-        // COUNTDOWN TIMER
-        // ==========================
-
-        function updateCountdown() {
-
-            const now =
-                new Date();
-
-            const diff =
-                CHALLENGE_START_DATE - now;
-
-
-            if (diff <= 0) {
-
-                document
-                    .getElementById(
-                        "countdown-timer"
-                    )
-                    .innerText =
-                    "Challenge Started!";
-
-                return;
-
-            }
-
-
-            const days =
-                Math.floor(
-                    diff
-                    /
-                    (
-                        1000
-                        *
-                        60
-                        *
-                        60
-                        *
-                        24
-                    )
-                );
-
-            const hours =
-                Math.floor(
-                    (
-                        diff
-                        %
-                        (
-                            1000
-                            *
-                            60
-                            *
-                            60
-                            *
-                            24
-                        )
-                    )
-                    /
-                    (
-                        1000
-                        *
-                        60
-                        *
-                        60
-                    )
-                );
-
-            const minutes =
-                Math.floor(
-                    (
-                        diff
-                        %
-                        (
-                            1000
-                            *
-                            60
-                            *
-                            60
-                        )
-                    )
-                    /
-                    (
-                        1000
-                        *
-                        60
-                    )
-                );
-
-            const seconds =
-                Math.floor(
-                    (
-                        diff
-                        %
-                        (
-                            1000
-                            *
-                            60
-                        )
-                    )
-                    /
-                    1000
-                );
-
-
-            document
-                .getElementById(
-                    "countdown-timer"
-                )
-                .innerText =
-                `${
-                    String(days)
-                        .padStart(
-                            2,
-                            "0"
-                        )
-                }d : ${
-                    String(hours)
-                        .padStart(
-                            2,
-                            "0"
-                        )
-                }h : ${
-                    String(minutes)
-                        .padStart(
-                            2,
-                            "0"
-                        )
-                }m : ${
-                    String(seconds)
-                        .padStart(
-                            2,
-                            "0"
-                        )
-                }s`;
-
-        }
-
-
-        setInterval(
-            updateCountdown,
-            1000
-        );
-
-        updateCountdown();
-
-
-
-        // ==========================
-        // AI COACH
+        // AI COACH CHAT
         // ==========================
 
         document
@@ -1545,16 +1552,16 @@
             )
             .addEventListener(
                 "click",
-                () => {
+                async () => {
 
-                    const input =
+                    const message =
                         document
                             .getElementById(
                                 "chat-input"
-                            );
+                            )
+                            .value
+                            .trim();
 
-                    const message =
-                        input.value.trim();
 
                     if (!message)
                         return;
@@ -1566,26 +1573,83 @@
                                 "chat-messages"
                             );
 
-                    const bubble =
+
+                    const userBubble =
                         document.createElement(
                             "div"
                         );
 
-                    bubble.className =
-                        "chat-bubble self-end bg-blue-600 text-white";
 
-                    bubble.textContent =
+                    userBubble.className =
+                        "chat-bubble self-end bg-blue-600/30 text-white";
+
+
+                    userBubble.textContent =
                         message;
 
+
                     messagesDiv.appendChild(
-                        bubble
+                        userBubble
                     );
 
-                    input.value = "";
 
-                    messagesDiv.scrollTop
-                        =
-                        messagesDiv.scrollHeight;
+                    document
+                        .getElementById(
+                            "chat-input"
+                        )
+                        .value = "";
+
+
+                    messagesDiv.scrollTop =
+                        messagesDiv
+                            .scrollHeight;
+
+
+                    const aiResponses = [
+                        "Bilkul! Tum kar sakte ho! 💪",
+                        "Consistency is key, beta! 🔥",
+                        "One step at a time! 👊",
+                        "You're crushing it! ⚡",
+                        "Mind over matter! 🧠"
+                    ];
+
+
+                    const aiResponse =
+                        aiResponses[
+                            Math.floor(
+                                Math.random()
+                                *
+                                aiResponses.length
+                            )
+                        ];
+
+
+                    setTimeout(() => {
+
+                        const aiBubble =
+                            document.createElement(
+                                "div"
+                            );
+
+
+                        aiBubble.className =
+                            "chat-bubble self-start bg-white/5 text-gray-300";
+
+
+                        aiBubble.textContent =
+                            aiResponse;
+
+
+                        messagesDiv.appendChild(
+                            aiBubble
+                        );
+
+
+                        messagesDiv.scrollTop =
+                            messagesDiv
+                                .scrollHeight;
+
+                    }, 300);
 
                 }
             );
