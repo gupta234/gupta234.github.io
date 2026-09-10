@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gupta234.github.io/sitemap.xml
