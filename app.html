@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Winter Arc Dashboard</title>
+
+    <!-- Google AdSense -->
+    <script async
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6551032201404007"
+        crossorigin="anonymous">
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            background: #020617;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            overflow-x: hidden;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .task-card {
+            border-left: 3px solid transparent;
+            transition: 0.2s;
+            margin-bottom: 6px;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .task-card:active {
+            transform: scale(0.98);
+        }
+
+        .done {
+            border-left-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            opacity: 0.8;
+        }
+
+        .active-task {
+            border-left-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        #chat-window {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 280px;
+            height: 380px;
+            z-index: 100;
+            transition: 0.3s;
+            transform: translateY(20px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #chat-window.active {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .chat-bubble {
+            padding: 8px 12px;
+            border-radius: 12px;
+            max-width: 85%;
+            margin-bottom: 8px;
+            font-size: 10px;
+            line-height: 1.4;
+        }
+
+        ::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+    </style>
+</head>
+
+<body class="p-4 flex flex-col items-center">
+
+    <div class="w-full max-w-md space-y-4 pb-20">
+
+        <div class="flex justify-between items-center">
+            <h1 class="text-base font-black italic text-blue-500 uppercase tracking-tighter">
+                Winter Arc
+            </h1>
+
+            <button
+                id="logout-btn"
+                class="text-[8px] text-red-500 opacity-40 uppercase font-bold">
+                Logout
+            </button>
+        </div>
+
+
+        <!-- Timer Section -->
+
+        <div class="bg-emerald-600/10 border border-emerald-500/30 p-4 rounded-2xl text-center shadow-lg">
+
+            <p class="text-gray-400 text-[9px] font-bold tracking-widest uppercase mb-1">
+                Challenge Starts In
+            </p>
+
+            <h3
+                id="countdown-timer"
+                class="text-lg font-mono font-black text-emerald-500 italic tracking-tighter">
+
+                00d : 00h : 00m : 00s
+
+            </h3>
+        </div>
+
+
+        <!-- User Profile Card -->
+
+        <div class="glass p-4 rounded-2xl border-l-4 border-blue-500 flex justify-between items-center shadow-xl">
+
+            <div class="flex items-center gap-3 overflow-hidden">
+
+                <div
+                    class="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center text-xl font-black text-blue-400 shrink-0"
+                    id="user-initial">
+
+                    W
+
+                </div>
+
+                <div class="flex-1 overflow-hidden">
+
+                    <div class="flex items-center gap-2">
+
+                        <span
+                            id="user-name"
+                            class="font-bold text-sm text-white whitespace-nowrap">
+
+                            Warrior
+
+                        </span>
+
+                        <button
+                            id="edit-name-btn"
+                            class="text-[7px] text-blue-400 border border-blue-400/20 px-1 rounded">
+
+                            Edit
+
+                        </button>
+
+                    </div>
+
+                    <div class="text-[9px] text-yellow-500 font-black tracking-widest">
+
+                        <span id="user-points">0</span> PTS
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="text-right ml-2 shrink-0">
+
+                <div class="text-[7px] text-gray-500 font-black uppercase">
+                    Streak 🔥
+                </div>
+
+                <div
+                    id="user-streak"
+                    class="text-base font-black text-orange-500">
+
+                    0 Days
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Leaderboard -->
+
+        <div class="glass p-3 rounded-2xl shadow-lg">
+
+            <h3 class="text-[9px] font-black text-yellow-500 uppercase mb-2 tracking-widest flex items-center gap-1">
+
+                🏆 Top Warriors
+
+            </h3>
+
+            <table class="w-full text-left text-[10px] border-collapse">
+
+                <tbody id="leaderboard-body"></tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- Checklist Header -->
+
+        <div class="flex justify-between items-end mt-4 px-1">
+
+            <div>
+
+                <h3 class="text-[9px] font-black text-emerald-500 uppercase tracking-widest">
+
+                    📋 Daily Time-Locked Tasks
+
+                </h3>
+
+                <p class="text-[7px] text-gray-500 font-bold uppercase mt-0.5 tracking-tighter">
+
+                    Complete all to earn 100 points daily!
+
+                </p>
+
+            </div>
+
+            <button
+                id="add-rule-btn"
+                class="bg-emerald-600 text-white w-6 h-6 rounded-lg flex items-center justify-center text-lg shadow-lg hover:scale-110 active:scale-95 transition">
+
+                +
+
+            </button>
+
+        </div>
+
+
+        <!-- Tasks List -->
+
+        <div
+            id="tasks-container"
+            class="space-y-1">
+        </div>
+
+    </div>
+
+
+
+    <!-- ADD CUSTOM RULE MODAL -->
+
+    <div
+        id="add-modal"
+        class="modal">
+
+        <div class="glass p-5 rounded-2xl w-full max-w-[280px] space-y-4 shadow-2xl border border-white/10">
+
+            <h2 class="text-sm font-black text-white uppercase italic tracking-tighter">
+
+                Add Custom Arc Rule
+
+            </h2>
+
+
+            <div class="space-y-3">
+
+                <div class="space-y-1">
+
+                    <label class="text-[8px] text-gray-500 font-bold uppercase ml-1">
+
+                        Task Name
+
+                    </label>
+
+                    <input
+                        type="text"
+                        id="rule-text"
+                        placeholder="e.g. Cold Shower"
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-3 py-2.5 text-[10px] text-white outline-none focus:border-emerald-500 transition">
+
+                </div>
+
+
+                <div class="grid grid-cols-2 gap-2">
+
+                    <div class="space-y-1">
+
+                        <label class="text-[8px] text-gray-500 font-bold uppercase ml-1">
+
+                            Start Time
+
+                        </label>
+
+                        <input
+                            type="time"
+                            id="rule-start"
+                            class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-2 py-2.5 text-[10px] text-white outline-none focus:border-emerald-500">
+
+                    </div>
+
+
+                    <div class="space-y-1">
+
+                        <label class="text-[8px] text-gray-500 font-bold uppercase ml-1">
+
+                            End Time
+
+                        </label>
+
+                        <input
+                            type="time"
+                            id="rule-end"
+                            class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-2 py-2.5 text-[10px] text-white outline-none focus:border-emerald-500">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="flex gap-2 pt-2">
+
+                <button
+                    id="cancel-add"
+                    class="flex-1 py-2.5 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+
+                    Cancel
+
+                </button>
+
+                <button
+                    id="save-rule"
+                    class="flex-1 py-2.5 bg-emerald-600 rounded-xl text-[9px] font-black uppercase text-white shadow-lg hover:bg-emerald-500 transition">
+
+                    Add Rule
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- AI COACH WINDOW -->
+
+    <div
+        id="chat-window"
+        class="glass rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-blue-500/20">
+
+        <div class="bg-blue-600/10 p-3 border-b border-white/5 flex justify-between items-center">
+
+            <span class="font-black italic text-blue-400 text-[10px] tracking-widest">
+
+                ARC COACH AI
+
+            </span>
+
+        </div>
+
+
+        <div
+            id="chat-messages"
+            class="flex-1 overflow-y-auto p-3 flex flex-col">
+
+            <div class="chat-bubble self-start bg-white/5 text-gray-300">
+
+                Warrior, focus karo. Kal se tabahi shuru karni hai! ⚡
+
+            </div>
+
+        </div>
+
+
+        <div class="p-2 bg-slate-900/50 flex gap-2 border-t border-white/5">
+
+            <input
+                type="text"
+                id="chat-input"
+                placeholder="Type message..."
+                class="flex-1 bg-transparent rounded-lg px-3 py-1.5 text-[10px] focus:outline-none border border-white/5 text-white">
+
+            <button
+                id="send-btn"
+                class="bg-blue-600 px-3 rounded-lg text-xs hover:bg-blue-500 transition">
+
+                ➤
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- AI Toggle Button -->
+
+    <button
+        id="chat-toggle"
+        class="fixed bottom-6 right-6 bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl z-50 text-xl hover:scale-110 active:scale-90 transition">
+
+        🤖
+
+    </button>
+
+
+
+    <script type="module">
+
+        import {
+            initializeApp
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+
+        import {
+            getAuth,
+            GoogleAuthProvider,
+            signInWithPopup,
+            onAuthStateChanged,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+
+        import {
+            getFirestore,
+            doc,
+            onSnapshot,
+            collection,
+            query,
+            orderBy,
+            limit,
+            getDoc,
+            setDoc,
+            updateDoc,
+            runTransaction
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+
+
+        const firebaseConfig = {
+
+            apiKey:
+                "AIzaSyCZqTzcU4kK5nkEkB1UcBQlMA-lOv0EPl0",
+
+            authDomain:
+                "winter-arc-ba20e.firebaseapp.com",
+
+            projectId:
+                "winter-arc-ba20e",
+
+            storageBucket:
+                "winter-arc-ba20e.appspot.com",
+
+            messagingSenderId:
+                "564956254415",
+
+            appId:
+                "1:564956254415:web:YOUR_ACTUAL_APP_ID"
+
+        };
+
+
+
+        const app = initializeApp(firebaseConfig);
+
+        const auth = getAuth(app);
+
+        const db = getFirestore(app);
+
+
+
+        let userProfile = null;
+
+        let activeRules = [];
+
+
+        const CHALLENGE_START_DATE =
+            new Date(2026, 8, 1);
+
+
+
+        // ==========================
+        // AUTH LISTENER
+        // ==========================
+
+        onAuthStateChanged(
+            auth,
+            async (user) => {
+
+                if (user) {
+
+                    await syncUser(user);
+
+
+
+                    // Global Rules
+
+                    onSnapshot(
+                        doc(
+                            db,
+                            "config",
+                            "active_challenge"
+                        ),
+
+                        (s) => {
+
+                            const globalRules =
+                                s.data()?.rules || [];
+
+
+                            if (
+                                !userProfile
+                                    ?.customRules
+                                    ?.length
+                            ) {
+
+                                activeRules =
+                                    globalRules;
+
+                                updateChecklist();
+
+                            }
+
+                        }
+                    );
+
+
+
+                    // User Profile
+
+                    onSnapshot(
+
+                        doc(
+                            db,
+                            "users",
+                            user.uid
+                        ),
+
+                        (s) => {
+
+                            userProfile =
+                                s.data();
+
+
+                            if (!userProfile)
+                                return;
+
+
+                            document
+                                .getElementById(
+                                    "user-points"
+                                )
+                                .innerText =
+                                userProfile.points || 0;
+
+
+                            document
+                                .getElementById(
+                                    "user-streak"
+                                )
+                                .innerText =
+                                (
+                                    userProfile.streak || 0
+                                )
+                                + " Days";
+
+
+                            document
+                                .getElementById(
+                                    "user-name"
+                                )
+                                .innerText =
+                                userProfile.name
+                                || "Warrior";
+
+
+                            document
+                                .getElementById(
+                                    "user-initial"
+                                )
+                                .innerText =
+                                (
+                                    userProfile.name
+                                    || "W"
+                                )
+                                .charAt(0)
+                                .toUpperCase();
+
+
+
+                            if (
+                                userProfile.customRules
+                                &&
+                                userProfile.customRules
+                                    .length > 0
+                            ) {
+
+                                activeRules =
+                                    userProfile
+                                        .customRules;
+
+                            }
+
+
+                            updateChecklist();
+
+                        }
+
+                    );
+
+
+                    syncLeaderboard();
+
+                }
+
+                else {
+
+                    signInWithPopup(
+                        auth,
+                        new GoogleAuthProvider()
+                    );
+
+                }
+
+            }
+        );
+
+
+
+        // ==========================
+        // CREATE USER
+        // ==========================
+
+        async function syncUser(user) {
+
+            const ref =
+                doc(
+                    db,
+                    "users",
+                    user.uid
+                );
+
+
+            const s =
+                await getDoc(ref);
+
+
+            if (!s.exists()) {
+
+                await setDoc(
+                    ref,
+                    {
+
+                        uid:
+                            user.uid,
+
+                        name:
+                            user.displayName
+                            || "Warrior",
+
+                        points:
+                            0,
+
+                        streak:
+                            0,
+
+                        dailyTaskCounts:
+                            {},
+
+                        attendance:
+                            {},
+
+                        customRules:
+                            [],
+
+                        dailyCompletedRules:
+                            {}
+
+                    }
+                );
+
+            }
+
+        }
+
+
+
+        // ==========================
+        // TIME FORMAT
+        // ==========================
+
+        function format12Hr(t24) {
+
+            if (!t24)
+                return "00:00";
+
+
+            const [h, m] =
+                t24.split(":");
+
+
+            let hr =
+                parseInt(h);
+
+
+            const ampm =
+                hr >= 12
+                    ? "PM"
+                    : "AM";
+
+
+            hr =
+                hr % 12 || 12;
+
+
+            return `${hr}:${m} ${ampm}`;
+
+        }
+
+
+
+        // ==========================
+        // STREAK CALCULATION
+        // ==========================
+
+        function calculateStreakJS(
+            attendance
+        ) {
+
+            let currentStreak = 0;
+
+            const now =
+                new Date();
+
+
+            if (
+                now
+                <
+                CHALLENGE_START_DATE
+            )
+                return 0;
+
+
+            const todayNum =
+                now.getDate();
+
+
+            for (
+                let day = 1;
+                day <= todayNum;
+                day++
+            ) {
+
+                if (
+                    attendance[
+                        day.toString()
+                    ]
+                    ===
+                    "present"
+                ) {
+
+                    currentStreak++;
+
+                }
+
+                else if (
+                    day < todayNum
+                ) {
+
+                    currentStreak = 0;
+
+                }
+
+            }
+
+
+            return currentStreak;
+
+        }
+
+
+
+        // ==========================
+        // COMPLETE RULE
+        // ==========================
+
+        window.toggleRuleWeb =
+            async (ruleId) => {
+
+                const now =
+                    new Date();
+
+
+                if (
+                    now
+                    <
+                    CHALLENGE_START_DATE
+                ) {
+
+                    return alert(
+                        "Challenge starts 1st Sept!"
+                    );
+
+                }
+
+
+                const rule =
+                    activeRules.find(
+                        r =>
+                            r.id === ruleId
+                    );
+
+
+                if (!rule)
+                    return;
+
+
+
+                const today =
+                    now
+                        .getDate()
+                        .toString();
+
+
+                const currentMins =
+                    now.getHours() * 60
+                    +
+                    now.getMinutes();
+
+
+                const [sH, sM] =
+                    rule
+                        .startTime
+                        .split(":")
+                        .map(Number);
+
+
+                const [eH, eM] =
+                    rule
+                        .endTime
+                        .split(":")
+                        .map(Number);
+
+
+
+                if (
+                    currentMins
+                    <
+                    (sH * 60 + sM)
+                    ||
+                    currentMins
+                    >
+                    (eH * 60 + eM)
+                ) {
+
+                    return alert(
+                        "Rule window is not active!"
+                    );
+
+                }
+
+
+
+                const completedList =
+                    userProfile
+                        ?.dailyCompletedRules
+                        ?.[today]
+                    || [];
+
+
+                if (
+                    completedList
+                        .includes(ruleId)
+                )
+                    return;
+
+
+
+                const pointsPerRule =
+                    Math.floor(
+                        100
+                        /
+                        activeRules.length
+                    );
+
+
+                const pointsToAdd =
+
+                    completedList.length
+                    ===
+                    activeRules.length - 1
+
+                    ?
+
+                    (
+                        100
+                        -
+                        (
+                            pointsPerRule
+                            *
+                            (
+                                activeRules.length
+                                - 1
+                            )
+                        )
+                    )
+
+                    :
+
+                    pointsPerRule;
+
+
+
+                const userRef =
+                    doc(
+                        db,
+                        "users",
+                        auth.currentUser.uid
+                    );
+
+
+
+                try {
+
+                    await runTransaction(
+                        db,
+                        async (t) => {
+
+
+                            const snap =
+                                await t.get(
+                                    userRef
+                                );
+
+
+                            const data =
+                                snap.data();
+
+
+                            const dailyMap =
+                                data
+                                    .dailyCompletedRules
+                                || {};
+
+
+                            const todayCompleted =
+                                [
+                                    ...(
+                                        dailyMap[today]
+                                        || []
+                                    )
+                                ];
+
+
+
+                            if (
+                                !todayCompleted
+                                    .includes(ruleId)
+                            ) {
+
+
+                                todayCompleted.push(
+                                    ruleId
+                                );
+
+
+                                const newCount =
+                                    todayCompleted.length;
+
+
+
+                                let updates = {
+
+                                    points:
+                                        (
+                                            data.points
+                                            +
+                                            pointsToAdd
+                                        )
+
+                                };
+
+
+                                updates
+                                    .dailyCompletedRules
+                                    =
+                                    {
+                                        ...dailyMap,
+                                        [today]:
+                                            todayCompleted
+                                    };
+
+
+
+                                if (
+                                    newCount
+                                    ===
+                                    activeRules.length
+                                ) {
+
+                                    const att =
+                                        data.attendance || {};
+
+                                    att[
+                                        today
+                                    ]
+                                    =
+                                        "present";
+
+                                    updates.attendance = att;
+
+                                    updates.streak =
+                                        calculateStreakJS(
+                                            att
+                                        );
+
+                                }
+
+
+                                t.update(
+                                    userRef,
+                                    updates
+                                );
+
+                            }
+
+                        }
+                    );
+
+                } catch (e) {
+
+                    console.error(
+                        e
+                    );
+
+                }
+
+            };
+
+
+
+        // ==========================
+        // UPDATE CHECKLIST
+        // ==========================
+
+        function updateChecklist() {
+
+            const container =
+                document.getElementById(
+                    "tasks-container"
+                );
+
+
+            container.innerHTML = "";
+
+
+            const today =
+                new Date()
+                    .getDate()
+                    .toString();
+
+
+            const completedToday =
+                userProfile
+                    ?.dailyCompletedRules
+                    ?.[today]
+                || [];
+
+
+            activeRules.forEach(
+                (rule) => {
+
+                    const isCompleted =
+                        completedToday
+                            .includes(
+                                rule.id
+                            );
+
+
+                    const card =
+                        document.createElement(
+                            "div"
+                        );
+
+                    card.className =
+                        "task-card " +
+                        (
+                            isCompleted
+                                ? "done"
+                                : "active-task"
+                        );
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span>${rule.name}</span>
+                            <span class="text-[8px] text-gray-400">
+                                ${format12Hr(rule.startTime)} - ${format12Hr(rule.endTime)}
+                            </span>
+                        </div>
+                    `;
+
+                    card.onclick =
+                        () =>
+                            window.toggleRuleWeb(
+                                rule.id
+                            );
+
+                    container.appendChild(
+                        card
+                    );
+
+                }
+            );
+
+        }
+
+
+
+        // ==========================
+        // LEADERBOARD
+        // ==========================
+
+        async function syncLeaderboard() {
+
+            const q =
+                query(
+                    collection(
+                        db,
+                        "users"
+                    ),
+
+                    orderBy(
+                        "points",
+                        "desc"
+                    ),
+
+                    limit(10)
+                );
+
+
+            onSnapshot(
+                q,
+                (snapshot) => {
+
+                    const tbody =
+                        document.getElementById(
+                            "leaderboard-body"
+                        );
+
+                    tbody.innerHTML = "";
+
+                    snapshot.forEach(
+                        (doc, index) => {
+
+                            const user =
+                                doc.data();
+
+                            const row =
+                                document.createElement(
+                                    "tr"
+                                );
+
+                            row.innerHTML = `
+                                <td class="py-1">${index + 1}. ${user.name}</td>
+                                <td class="text-right font-bold text-yellow-400">${user.points}</td>
+                            `;
+
+                            tbody.appendChild(
+                                row
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+
+
+
+        // ==========================
+        // MODAL CONTROLS
+        // ==========================
+
+        document
+            .getElementById(
+                "add-rule-btn"
+            )
+            .addEventListener(
+                "click",
+                () => {
+
+                    document
+                        .getElementById(
+                            "add-modal"
+                        )
+                        .classList
+                        .add("active");
+
+                }
+            );
+
+
+        document
+            .getElementById(
+                "cancel-add"
+            )
+            .addEventListener(
+                "click",
+                () => {
+
+                    document
+                        .getElementById(
+                            "add-modal"
+                        )
+                        .classList
+                        .remove("active");
+
+                }
+            );
+
+
+        document
+            .getElementById(
+                "save-rule"
+            )
+            .addEventListener(
+                "click",
+                async () => {
+
+                    const name =
+                        document
+                            .getElementById(
+                                "rule-text"
+                            ).value;
+
+                    const start =
+                        document
+                            .getElementById(
+                                "rule-start"
+                            ).value;
+
+                    const end =
+                        document
+                            .getElementById(
+                                "rule-end"
+                            ).value;
+
+
+                    if (!name || !start || !end) {
+
+                        alert(
+                            "Fill all fields!"
+                        );
+
+                        return;
+
+                    }
+
+
+                    const newRule = {
+
+                        id:
+                            Date.now()
+                                .toString(),
+
+                        name,
+
+                        startTime: start,
+
+                        endTime: end
+
+                    };
+
+
+                    const userRef =
+                        doc(
+                            db,
+                            "users",
+                            auth.currentUser.uid
+                        );
+
+
+
+                    const rules =
+                        userProfile?.customRules
+                        || [];
+
+                    rules.push(newRule);
+
+                    await updateDoc(
+                        userRef,
+                        {
+                            customRules: rules
+                        }
+                    );
+
+
+
+                    document
+                        .getElementById(
+                            "rule-text"
+                        ).value = "";
+
+                    document
+                        .getElementById(
+                            "rule-start"
+                        ).value = "";
+
+                    document
+                        .getElementById(
+                            "rule-end"
+                        ).value = "";
+
+
+                    document
+                        .getElementById(
+                            "add-modal"
+                        )
+                        .classList
+                        .remove("active");
+
+                }
+            );
+
+
+
+        // ==========================
+        // LOGOUT
+        // ==========================
+
+        document
+            .getElementById(
+                "logout-btn"
+            )
+            .addEventListener(
+                "click",
+                () => {
+
+                    signOut(auth);
+
+                }
+            );
+
+
+
+        // ==========================
+        // COUNTDOWN TIMER
+        // ==========================
+
+        function updateCountdown() {
+
+            const now =
+                new Date();
+
+            const diff =
+                CHALLENGE_START_DATE - now;
+
+
+            if (diff <= 0) {
+
+                document
+                    .getElementById(
+                        "countdown-timer"
+                    )
+                    .innerText =
+                    "Challenge Started!";
+
+                return;
+
+            }
+
+
+            const days =
+                Math.floor(
+                    diff
+                    /
+                    (
+                        1000
+                        *
+                        60
+                        *
+                        60
+                        *
+                        24
+                    )
+                );
+
+            const hours =
+                Math.floor(
+                    (
+                        diff
+                        %
+                        (
+                            1000
+                            *
+                            60
+                            *
+                            60
+                            *
+                            24
+                        )
+                    )
+                    /
+                    (
+                        1000
+                        *
+                        60
+                        *
+                        60
+                    )
+                );
+
+            const minutes =
+                Math.floor(
+                    (
+                        diff
+                        %
+                        (
+                            1000
+                            *
+                            60
+                            *
+                            60
+                        )
+                    )
+                    /
+                    (
+                        1000
+                        *
+                        60
+                    )
+                );
+
+            const seconds =
+                Math.floor(
+                    (
+                        diff
+                        %
+                        (
+                            1000
+                            *
+                            60
+                        )
+                    )
+                    /
+                    1000
+                );
+
+
+            document
+                .getElementById(
+                    "countdown-timer"
+                )
+                .innerText =
+                `${
+                    String(days)
+                        .padStart(
+                            2,
+                            "0"
+                        )
+                }d : ${
+                    String(hours)
+                        .padStart(
+                            2,
+                            "0"
+                        )
+                }h : ${
+                    String(minutes)
+                        .padStart(
+                            2,
+                            "0"
+                        )
+                }m : ${
+                    String(seconds)
+                        .padStart(
+                            2,
+                            "0"
+                        )
+                }s`;
+
+        }
+
+
+        setInterval(
+            updateCountdown,
+            1000
+        );
+
+        updateCountdown();
+
+
+
+        // ==========================
+        // AI COACH
+        // ==========================
+
+        document
+            .getElementById(
+                "chat-toggle"
+            )
+            .addEventListener(
+                "click",
+                () => {
+
+                    document
+                        .getElementById(
+                            "chat-window"
+                        )
+                        .classList
+                        .toggle("active");
+
+                }
+            );
+
+
+        document
+            .getElementById(
+                "send-btn"
+            )
+            .addEventListener(
+                "click",
+                () => {
+
+                    const input =
+                        document
+                            .getElementById(
+                                "chat-input"
+                            );
+
+                    const message =
+                        input.value.trim();
+
+                    if (!message)
+                        return;
+
+
+                    const messagesDiv =
+                        document
+                            .getElementById(
+                                "chat-messages"
+                            );
+
+                    const bubble =
+                        document.createElement(
+                            "div"
+                        );
+
+                    bubble.className =
+                        "chat-bubble self-end bg-blue-600 text-white";
+
+                    bubble.textContent =
+                        message;
+
+                    messagesDiv.appendChild(
+                        bubble
+                    );
+
+                    input.value = "";
+
+                    messagesDiv.scrollTop
+                        =
+                        messagesDiv.scrollHeight;
+
+                }
+            );
+
+    </script>
+
+</body>
+
+</html>
