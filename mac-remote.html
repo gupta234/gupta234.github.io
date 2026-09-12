@@ -344,6 +344,14 @@
 
 
     <div class="card">
+      <h2>Keyboard</h2>
+      <button data-action="keyboard_tab" style="width:100%">
+        ⇥ Tab
+      </button>
+    </div>
+
+
+    <div class="card">
       <button
         id="logout"
         class="danger"
@@ -1002,8 +1010,6 @@ trackpad.addEventListener(
       "active"
     );
 
-    event.preventDefault();
-
   }
 );
 
@@ -1013,19 +1019,17 @@ trackpad.addEventListener(
   event => {
 
     if (
-      event.pointerId !==
-      trackPointer
+      trackPointer !==
+      event.pointerId
     )
       return;
 
 
     const dx =
-      event.clientX -
-      lastX;
+      event.clientX - lastX;
 
     const dy =
-      event.clientY -
-      lastY;
+      event.clientY - lastY;
 
 
     lastX =
@@ -1035,54 +1039,60 @@ trackpad.addEventListener(
       event.clientY;
 
 
-    /*
-      Sensitivity multiplier
-    */
-
     moveDX +=
-      dx * 1.45;
+      dx;
 
     moveDY +=
-      dy * 1.45;
+      dy;
 
 
     pump();
-
-    event.preventDefault();
 
   }
 );
 
 
-function endTrackpad(
-  event
-) {
-
-  if (
-    event.pointerId !==
-    trackPointer
-  )
-    return;
-
-
-  trackPointer =
-    null;
-
-  trackpad.classList.remove(
-    "active"
-  );
-
-}
-
-
 trackpad.addEventListener(
   "pointerup",
-  endTrackpad
+  event => {
+
+    if (
+      trackPointer !==
+      event.pointerId
+    )
+      return;
+
+
+    trackPointer =
+      null;
+
+    trackpad.classList.remove(
+      "active"
+    );
+
+  }
 );
+
 
 trackpad.addEventListener(
   "pointercancel",
-  endTrackpad
+  event => {
+
+    if (
+      trackPointer !==
+      event.pointerId
+    )
+      return;
+
+
+    trackPointer =
+      null;
+
+    trackpad.classList.remove(
+      "active"
+    );
+
+  }
 );
 
 
@@ -1109,8 +1119,6 @@ scrollpad.addEventListener(
     scrollLastY =
       event.clientY;
 
-    event.preventDefault();
-
   }
 );
 
@@ -1120,13 +1128,13 @@ scrollpad.addEventListener(
   event => {
 
     if (
-      event.pointerId !==
-      scrollPointer
+      scrollPointer !==
+      event.pointerId
     )
       return;
 
 
-    const delta =
+    const dy =
       event.clientY -
       scrollLastY;
 
@@ -1136,50 +1144,48 @@ scrollpad.addEventListener(
 
 
     scrollDY +=
-      -delta / 7;
+      dy;
 
 
     pump();
-
-    event.preventDefault();
 
   }
 );
 
 
-function endScroll(
-  event
-) {
+scrollpad.addEventListener(
+  "pointerup",
+  event => {
 
-  if (
-    event.pointerId ===
-    scrollPointer
-  ) {
+    if (
+      scrollPointer !==
+      event.pointerId
+    )
+      return;
+
 
     scrollPointer =
       null;
 
   }
-
-}
-
-
-scrollpad.addEventListener(
-  "pointerup",
-  endScroll
 );
+
 
 scrollpad.addEventListener(
   "pointercancel",
-  endScroll
-);
+  event => {
+
+    if (
+      scrollPointer !==
+      event.pointerId
+    )
+      return;
 
 
-/* Retry pending input */
+    scrollPointer =
+      null;
 
-setInterval(
-  pump,
-  80
+  }
 );
 
 </script>
