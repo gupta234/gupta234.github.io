@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mac Remote Test</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #101312;
+      color: #f4f6f4;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .card {
+      width: min(420px, 92vw);
+      padding: 28px;
+      border: 1px solid #39443d;
+      border-radius: 22px;
+      background: #171b19;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 30px;
+    }
+
+    p {
+      color: #aeb8b1;
+      line-height: 1.5;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      margin-top: 12px;
+      border: 0;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #login {
+      background: white;
+      color: #111;
+    }
+
+    #ping {
+      background: #b7ff59;
+      color: #101312;
+    }
+
+    #ping:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    .box {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 12px;
+      background: #0c0f0e;
+      font-family: monospace;
+      overflow-wrap: anywhere;
+    }
+
+    .online { color: #b7ff59; }
+    .error { color: #ff7272; }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>Mac Remote</h1>
+  <p>
+    Internet connection test.<br>
+    Phone and Mac can be on different networks.
+  </p>
+
+  <button id="login">Sign in with Google</button>
+  <button id="ping" disabled>Send PING to Mac</button>
+
+  <div class="box">
+    Login:
+    <span id="authStatus">Signed out</span>
+  </div>
+
+  <div class="box">
+    Mac:
+    <span id="macStatus">Checking...</span>
+  </div>
+
+  <div class="box">
+    Result:
+    <span id="result">—</span>
+  </div>
+</div>
+
+
+<script type="module">
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAy-XwYmovgcttIjX8PfVvr_IJN3-DqGqE",
+  authDomain: "winter-arc-ba20e.firebaseapp.com",
+  databaseURL:
+    "https://winter-arc-ba20e-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "winter-arc-ba20e",
+  storageBucket: "winter-arc-ba20e.firebasestorage.app",
+  messagingSenderId: "564956254415",
+  appId: "1:564956254415:web:6190ace94206af5d32e7ba"
+};
+
+
+const ALLOWED_UID =
+  "vjohyWfzq0N8vysK0W2O6bWkeUP2";
+
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+const provider = new GoogleAuthProvider();
+
+provider.setCustomParameters({
+  prompt: "select_account"
+});
+
+
+const loginButton =
+  document.getElementById("login");
+
+const pingButton =
+  document.getElementById("ping");
+
+const authStatus =
+  document.getElementById("authStatus");
+
+const macStatus =
+  document.getElementById("macStatus");
+
+const result =
+  document.getElementById("result");
+
+
+let currentCommandId = "";
+
+
+/* LOGIN */
+
+loginButton.onclick = async () => {
+
+  result.textContent = "Opening Google login...";
+
+  try {
+
+    await signInWithPopup(
+      auth,
+      provider
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    if (
+      error.code === "auth/popup-blocked" ||
+      error.code === "auth/operation-not-supported-in-this-environment"
+    ) {
+
+      await signInWithRedirect(
+        auth,
+        provider
+      );
+
+    } else {
+
+      result.textContent =
+        error.message;
+
+      result.className = "error";
+    }
+  }
+};
+
+
+/* LOGIN STATE */
+
+onAuthStateChanged(
+  auth,
+  async user => {
+
+    if (!user) {
+
+      authStatus.textContent =
+        "Signed out";
+
+      pingButton.disabled = true;
+
+      return;
+    }
+
+
+    if (
+      user.uid !== ALLOWED_UID
+    ) {
+
+      authStatus.textContent =
+        "Wrong Google account";
+
+      pingButton.disabled = true;
+
+      await signOut(auth);
+
+      return;
+    }
+
+
+    authStatus.textContent =
+      user.email || "Signed in";
+
+    authStatus.className =
+      "online";
+
+    pingButton.disabled = false;
+
+    loginButton.textContent =
+      "Google account connected";
+  }
+);
+
+
+/* MAC STATUS */
+
+onValue(
+  ref(db, "macRemote/status"),
+  snapshot => {
+
+    const data =
+      snapshot.val();
+
+    if (!data) {
+
+      macStatus.textContent =
+        "No status yet";
+
+      return;
+    }
+
+
+    const age =
+      Date.now() -
+      Number(data.timestamp || 0);
+
+
+    if (
+      data.online &&
+      age < 60000
+    ) {
+
+      macStatus.textContent =
+        "ONLINE";
+
+      macStatus.className =
+        "online";
+
+    } else {
+
+      macStatus.textContent =
+        "OFFLINE / stale";
+
+      macStatus.className =
+        "error";
+    }
+  }
+);
+
+
+/* RESULT LISTENER */
+
+onValue(
+  ref(db, "macRemote/result"),
+  snapshot => {
+
+    const data =
+      snapshot.val();
+
+    if (!data)
+      return;
+
+
+    if (
+      currentCommandId &&
+      data.id === currentCommandId
+    ) {
+
+      if (data.ok) {
+
+        result.textContent =
+          "✅ " +
+          (data.message || "Done");
+
+        result.className =
+          "online";
+
+      } else {
+
+        result.textContent =
+          "❌ " +
+          (data.message || "Command failed");
+
+        result.className =
+          "error";
+      }
+    }
+  }
+);
+
+
+/* SEND PING */
+
+pingButton.onclick = async () => {
+
+  try {
+
+    currentCommandId =
+      (
+        crypto.randomUUID
+          ? crypto.randomUUID()
+          : Date.now() +
+            "-" +
+            Math.random()
+      );
+
+
+    result.textContent =
+      "Sending PING...";
+
+
+    await set(
+      ref(
+        db,
+        "macRemote/command"
+      ),
+      {
+        id: currentCommandId,
+        type: "ping",
+        createdAt: Date.now()
+      }
+    );
+
+
+    result.textContent =
+      "PING sent. Waiting for Mac...";
+
+  } catch (error) {
+
+    console.error(error);
+
+    result.textContent =
+      "❌ " + error.message;
+
+    result.className =
+      "error";
+  }
+};
+
+</script>
+
+</body>
+</html>
