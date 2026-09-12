@@ -482,6 +482,15 @@ let moveDY = 0;
 
 let scrollDY = 0;
 
+let fastSequence =
+  Date.now() * 1000;
+
+const mouseFastRef =
+  ref(
+    db,
+    "macRemote/mouseFast"
+  );
+
 
 function uid() {
 
@@ -733,89 +742,6 @@ async function pump() {
     return;
 
 
-  /*
-    Mouse movement gets combined instead
-    of creating hundreds of Firebase writes.
-  */
-
-  if (
-    Math.abs(moveDX) > 0.1 ||
-    Math.abs(moveDY) > 0.1
-  ) {
-
-    const dx =
-      Math.max(
-        -300,
-        Math.min(
-          300,
-          moveDX
-        )
-      );
-
-    const dy =
-      Math.max(
-        -300,
-        Math.min(
-          300,
-          moveDY
-        )
-      );
-
-    moveDX -= dx;
-    moveDY -= dy;
-
-    await transmit({
-
-      type:
-        "mouse",
-
-      kind:
-        "move",
-
-      dx:
-        Number(dx.toFixed(2)),
-
-      dy:
-        Number(dy.toFixed(2))
-
-    });
-
-    return;
-  }
-
-
-  if (
-    Math.abs(scrollDY) >= 1
-  ) {
-
-    const dy =
-      Math.max(
-        -20,
-        Math.min(
-          20,
-          scrollDY
-        )
-      );
-
-    scrollDY -= dy;
-
-    await transmit({
-
-      type:
-        "mouse",
-
-      kind:
-        "scroll",
-
-      dy:
-        Number(dy.toFixed(2))
-
-    });
-
-    return;
-  }
-
-
   const next =
     commandQueue.shift();
 
@@ -825,6 +751,93 @@ async function pump() {
 
   }
 }
+
+
+/* ---------------- FAST INPUT ---------------- */
+
+function sendFastInput(
+  kind,
+  values = {}
+) {
+
+  if (!loggedIn)
+    return;
+
+  fastSequence += 1;
+
+  set(
+    mouseFastRef,
+    {
+      kind,
+      seq: fastSequence,
+      timestamp: Date.now(),
+      ...values
+    }
+  ).catch(error => {
+    console.error(
+      "Fast input write failed:",
+      error
+    );
+  });
+}
+
+
+function flushFastInput() {
+
+  if (!loggedIn) {
+    moveDX = 0;
+    moveDY = 0;
+    scrollDY = 0;
+    return;
+  }
+
+  if (
+    Math.abs(moveDX) > 0.1 ||
+    Math.abs(moveDY) > 0.1
+  ) {
+
+    const dx = moveDX;
+    const dy = moveDY;
+
+    moveDX = 0;
+    moveDY = 0;
+
+    sendFastInput(
+      "move",
+      {
+        dx: Number(dx.toFixed(2)),
+        dy: Number(dy.toFixed(2))
+      }
+    );
+
+    return;
+  }
+
+  if (Math.abs(scrollDY) >= 1) {
+
+    const dy =
+      Math.max(
+        -24,
+        Math.min(
+          24,
+          Math.trunc(scrollDY)
+        )
+      );
+
+    scrollDY -= dy;
+
+    sendFastInput(
+      "scroll",
+      {dy}
+    );
+  }
+}
+
+
+setInterval(
+  flushFastInput,
+  25
+);
 
 
 /* ---------------- RESULT ---------------- */
@@ -1039,14 +1052,23 @@ trackpad.addEventListener(
       event.clientY;
 
 
-    moveDX +=
-      dx;
+    moveDX =
+      Math.max(
+        -300,
+        Math.min(
+          300,
+          moveDX + dx
+        )
+      );
 
-    moveDY +=
-      dy;
-
-
-    pump();
+    moveDY =
+      Math.max(
+        -300,
+        Math.min(
+          300,
+          moveDY + dy
+        )
+      );
 
   }
 );
@@ -1065,6 +1087,14 @@ trackpad.addEventListener(
 
     trackPointer =
       null;
+
+    moveDX = 0;
+    moveDY = 0;
+
+    sendFastInput(
+      "stop",
+      {channel: "move"}
+    );
 
     trackpad.classList.remove(
       "active"
@@ -1087,6 +1117,14 @@ trackpad.addEventListener(
 
     trackPointer =
       null;
+
+    moveDX = 0;
+    moveDY = 0;
+
+    sendFastInput(
+      "stop",
+      {channel: "move"}
+    );
 
     trackpad.classList.remove(
       "active"
@@ -1143,11 +1181,14 @@ scrollpad.addEventListener(
       event.clientY;
 
 
-    scrollDY +=
-      dy;
-
-
-    pump();
+    scrollDY =
+      Math.max(
+        -24,
+        Math.min(
+          24,
+          scrollDY + (-dy / 10)
+        )
+      );
 
   }
 );
@@ -1167,6 +1208,13 @@ scrollpad.addEventListener(
     scrollPointer =
       null;
 
+    scrollDY = 0;
+
+    sendFastInput(
+      "stop",
+      {channel: "scroll"}
+    );
+
   }
 );
 
@@ -1184,6 +1232,13 @@ scrollpad.addEventListener(
 
     scrollPointer =
       null;
+
+    scrollDY = 0;
+
+    sendFastInput(
+      "stop",
+      {channel: "scroll"}
+    );
 
   }
 );
